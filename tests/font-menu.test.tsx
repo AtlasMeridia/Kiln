@@ -2,7 +2,7 @@
  * The appearance wave's font dropdown (2026-09-26): the pure row-set
  * (fontMenuResults — the DEFAULT row is a fuzzy candidate, so Enter can
  * never pick a row that isn't on screen), the pick composer (null = the
- * factory Source Sans 3), the curated dev-browser fallback roster, the
+ * factory Literata), the curated dev-browser fallback roster, the
  * FontMenuList SSR shape, and the emphasis-ink factory ruling (globals.css
  * no longer ships #ee928c/#6fa9d6 — unset inks are the text color).
  */
@@ -26,11 +26,11 @@ describe("fontMenuResults — the DEFAULT row is a candidate, never a ghost pick
 		assert.deepEqual(fontMenuResults("", families), [null, "Arial", "CMU Serif", "Georgia", "Helvetica Neue", "Menlo"]);
 	});
 
-	it("the default row matches its own identity (source/sans/default), not everything", () => {
+	it("the default row matches its own identity (literata/serif/default), not everything", () => {
 		assert.deepEqual(fontMenuResults("georgia", families), ["Georgia"]);
 		assert.deepEqual(fontMenuResults("menlo", families), ["Menlo"]);
 		// the default row is reachable by search…
-		assert.deepEqual(fontMenuResults("source", families)[0], null);
+		assert.deepEqual(fontMenuResults("literata", families)[0], null);
 		assert.ok(fontMenuResults("default", families).includes(null));
 		// …and drops out of unrelated queries
 		assert.ok(!fontMenuResults("georgia", families).includes(null));
@@ -42,7 +42,7 @@ describe("fontMenuResults — the DEFAULT row is a candidate, never a ghost pick
 });
 
 describe("composeFontFamily — null/blank = the factory family, otherwise verbatim", () => {
-	it("null → fontFamily null (Source Sans 3 semantics preserved)", () => {
+	it("null → fontFamily null (Literata semantics preserved)", () => {
 		assert.equal(composeFontFamily({ background: "#101010" }, null).fontFamily, null);
 	});
 	it("blank/whitespace → null too", () => {
@@ -59,7 +59,7 @@ describe("composeFontFamily — null/blank = the factory family, otherwise verba
 
 describe("the curated dev-browser fallback", () => {
 	it("is the app's knowns + ubiquitous macOS families — and never a fabricated system list member for the factory family", () => {
-		assert.ok(CURATED_FALLBACK_FONTS.includes("CMU Serif"));
+		assert.ok(CURATED_FALLBACK_FONTS.includes("Fraunces"));
 		assert.ok(CURATED_FALLBACK_FONTS.includes("Georgia"));
 		// the factory family lives ONLY as the DEFAULT row — never a
 		// duplicated family row
@@ -134,21 +134,22 @@ describe("the appearance section's font control (thin SSR)", () => {
 describe("the emphasis-ink factory ruling (globals.css)", () => {
 	it("the old emphasis hexes are GONE from the ink token declarations", () => {
 		const css = fs.readFileSync("app/globals.css", "utf-8");
-		assert.ok(!css.includes("--lh-ink-strong: #ee928c"), "bold factory is not the old orange");
-		assert.ok(!css.includes("--lh-ink-italic: #6fa9d6"), "italic factory is not the old blue");
+		assert.ok(!css.includes("--kiln-ink-strong: #ee928c"), "bold factory is not the old orange");
+		assert.ok(!css.includes("--kiln-ink-italic: #6fa9d6"), "italic factory is not the old blue");
 	});
 
-	it("both blocks default the inks to the regular text color", () => {
+	it("both blocks follow the Minerali emphasis doctrine", () => {
 		const css = fs.readFileSync("app/globals.css", "utf-8");
-		assert.equal((css.match(/--lh-ink-strong: var\(--foreground\)/g) ?? []).length, 2, "both theme blocks");
-		assert.equal((css.match(/--lh-ink-italic: var\(--foreground\)/g) ?? []).length, 2, "both theme blocks");
+		assert.equal((css.match(/--kiln-ink-strong: var\(--foreground\)/g) ?? []).length, 2, "bold = text color, both theme blocks");
+		assert.equal((css.match(/--kiln-ink-italic: var\(--accent-text\)/g) ?? []).length, 2, "italic = rust accent, both theme blocks");
 	});
 
-	it("the appearance rows' empty-state labels say 'same as text'", () => {
+	it("the appearance rows' empty-state labels state their factories", () => {
 		const html = renderToStaticMarkup(
 			<AppearanceSection appearance={undefined} onSectionChange={() => {}} />,
 		);
-		assert.equal((html.match(/Empty = same as text/g) ?? []).length, 2, "bold + italic rows");
+		assert.equal((html.match(/Empty = same as text/g) ?? []).length, 1, "bold row");
+		assert.equal((html.match(/Empty = rust \(accent\)/g) ?? []).length, 1, "italic row");
 		assert.ok(!html.includes("#ee928c"));
 		assert.ok(!html.includes("#6fa9d6"));
 	});
@@ -164,8 +165,8 @@ describe("customFamilyFor — the single-field custom escape (2026-09-26)", () =
 
 	it("a matching family is the better pick — no action row", () => {
 		assert.equal(customFamilyFor("georgia", families), null);
-		// the default row matches too — "source"/"sans"/"default" queries pick it
-		assert.equal(customFamilyFor("source", families), null);
+		// the default row matches too — "literata"/"serif"/"default" queries pick it
+		assert.equal(customFamilyFor("literata", families), null);
 	});
 
 	it("an empty query is never a custom pick", () => {

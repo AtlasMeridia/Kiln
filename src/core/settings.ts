@@ -511,8 +511,8 @@ export const FACTORY_SETTINGS: FactorySettings = {
 	dictation: { language: "en" },
 	appearance: {
 		mode: "dark",
-		background: null, // the dark default (#141414) lives in the mode's derivation curve
-		fontFamily: null, // Source Sans 3
+		background: null, // the graphite default (Minerali #1a1a1d) lives in the factory stylesheet tokens
+		fontFamily: null, // Literata (Minerali prose face)
 		proseFontSize: 16,
 		sessionNameSerif: true,
 		mdRendering: { headingWeight: 900, boldColor: null, italicColor: null },

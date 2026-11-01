@@ -23,7 +23,7 @@ function windowOptions(platform: string, env: Record<string, string> = {}) {
 		once() {}
 	}
 	const electron = {
-		app: { setName() {}, getPath: () => "/fixture/LearnHarness", setPath() {}, requestSingleInstanceLock: () => false, quit() {} },
+		app: { setName() {}, getPath: () => "/fixture/Kiln", setPath() {}, requestSingleInstanceLock: () => false, quit() {} },
 		BrowserWindow: FakeWindow,
 		session: { defaultSession: { setPermissionRequestHandler() {}, setPermissionCheckHandler() {} } },
 	};
@@ -51,7 +51,7 @@ describe("desktop window chrome", () => {
 		it(`${platform} uses native-height right-side controls with an Alt-accessible menu`, () => {
 			const options = windowOptions(platform);
 			assert.equal(options.titleBarStyle, "hidden");
-			assert.deepEqual(options.titleBarOverlay, { color: "#141414", symbolColor: "#e5e5e5" });
+			assert.deepEqual(options.titleBarOverlay, { color: "#1a1a1d", symbolColor: "#e6ddc8" });
 			assert.equal(Object.hasOwn(options.titleBarOverlay, "height"), false, "omit height so the OS selects its native default");
 			assert.equal(options.trafficLightPosition, undefined);
 			assert.equal(options.autoHideMenuBar, true);
@@ -63,20 +63,20 @@ describe("desktop window chrome", () => {
 
 	it("only the external dev shell receives the web subscription transport marker", () => {
 		assert.equal(windowOptions("darwin").webPreferences.additionalArguments, undefined);
-		assert.deepEqual(windowOptions("darwin", { LH_DEV_URL: "http://localhost:3000" }).webPreferences.additionalArguments, ["--lh-web-subscriptions"]);
+		assert.deepEqual(windowOptions("darwin", { KILN_DEV_URL: "http://localhost:3000" }).webPreferences.additionalArguments, ["--kiln-web-subscriptions"]);
 	});
 
 	it("dev preload routes opaque sign-in actions through its narrow external-browser channel", async () => {
 		let bridge!: { subscriptionTransport: string; openSubscriptionBrowser(action: string): Promise<void> };
 		const invoked: unknown[][] = [];
 		runInNewContext(readFileSync(new URL("../electron/preload.cjs", import.meta.url), "utf8"), {
-			process: { platform: "darwin", argv: ["--lh-web-subscriptions"] },
+			process: { platform: "darwin", argv: ["--kiln-web-subscriptions"] },
 			require: () => ({ contextBridge: { exposeInMainWorld: (_: string, value: typeof bridge) => { bridge = value; } }, ipcRenderer: { on() {}, invoke: async (...args: unknown[]) => { invoked.push(args); } } }),
 		});
 		assert.equal(bridge.subscriptionTransport, "web");
 		const action = "/api/subscriptions/browser?id=00000000-0000-4000-8000-000000000001";
 		await bridge.openSubscriptionBrowser(action);
-		assert.deepEqual(invoked, [["lh:subscriptions:web-browser", action]]);
+		assert.deepEqual(invoked, [["kiln:subscriptions:web-browser", action]]);
 	});
 
 	it("preload exposes OS identity without exposing Node/Electron to the renderer", () => {
@@ -86,7 +86,7 @@ describe("desktop window chrome", () => {
 			require: () => ({
 				contextBridge: {
 					exposeInMainWorld(name: string, api: Record<string, unknown>) {
-						assert.equal(name, "lh");
+						assert.equal(name, "kiln");
 						bridge = api;
 					},
 				},
@@ -121,7 +121,7 @@ describe("update preload bridge", () => {
 				},
 			}),
 		});
-		const send = () => handlers.get("lh:open-settings")!({}, "general");
+		const send = () => handlers.get("kiln:open-settings")!({}, "general");
 		const seen: string[] = [];
 		send(); const off = bridge.onOpenSettings(section => seen.push(section));
 		assert.deepEqual(seen, ["general"], "pre-subscription request is delivered once");
@@ -132,7 +132,7 @@ describe("update preload bridge", () => {
 		off(); send(); assert.equal(next.length, 2, "old cleanup cannot remove a newer subscriber");
 		offNext();
 		await bridge.getUpdateState(); await bridge.checkForUpdates();
-		assert.deepEqual(invoked, ["lh:update:get", "lh:update:check"]);
+		assert.deepEqual(invoked, ["kiln:update:get", "kiln:update:check"]);
 	});
 });
 
@@ -161,10 +161,10 @@ describe("desktop packaging policy", () => {
 
 	it("deb has public maintainer metadata and a matching desktop identity", () => {
 		const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-		assert.equal(pkg.author.name, "Amos Blomqvist");
-		assert.equal(pkg.author.email, "255718537+amosblomqvist@users.noreply.github.com");
-		assert.equal(pkg.homepage, "https://github.com/amosblomqvist/learnharness");
-		assert.equal(pkg.desktopName, "learnharness.desktop");
+		assert.equal(pkg.author.name, "AtlasMeridia");
+		assert.equal(pkg.author.email, undefined);
+		assert.equal(pkg.homepage, "https://github.com/AtlasMeridia/Kiln");
+		assert.equal(pkg.desktopName, "kiln.desktop");
 	});
 });
 

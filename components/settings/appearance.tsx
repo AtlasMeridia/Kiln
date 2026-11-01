@@ -5,7 +5,7 @@
  * the factory defaults and applied as RUNTIME CSS variables on <html>.
  *
  * Why variables and not className swaps: every seam the settings touch was
- * built token-first (--font-prose, --lh-prose-size, --lh-ink-strong, …),
+ * built token-first (--font-prose, --kiln-prose-size, --kiln-ink-strong, …),
  * so application is setProperty and nothing re-renders. The ONE thing the
  * variables can't reach — the mode — is dark-only this wave (the light
  * palette is designed in the later design wave; <html class="dark"> is
@@ -39,10 +39,12 @@ export function resolveAppearance(delta: AppearanceSettings | undefined) {
 	};
 }
 
-/** One channel clamped on the dark curve: additive offsets matching today's
- *  hand-picked palette (#141414 → card #1c1c1c (+8) → accent #2a2a2a (+22)
- *  → border #434343 (+47)) — the "per-mode derivation in code" the schema
- *  promises, as the thinnest curve that keeps the palette's relationships. */
+/** One channel clamped on the dark curve: additive offsets tracking the
+ *  Minerali graphite factory ladder (#1a1a1d → card #202024 (+6) → accent
+ *  #3b3a37 (+33) → border #2e2e33 (+20)) — the "per-mode derivation in
+ *  code" the schema promises, as the thinnest curve that keeps the
+ *  Minerali relationships. Custom backgrounds approximate the same
+ *  steps; the factory itself resolves through the atlas-design tokens. */
 function raise(hex: string, add: number): string {
 	const n = hex.length === 4
 		? hex.slice(1).split("").map((c) => parseInt(c + c, 16))
@@ -51,13 +53,13 @@ function raise(hex: string, add: number): string {
 }
 
 /** The derived palette a chosen background implies (dark curve): background
- *  itself, the raised surfaces (card/popover/secondary/muted, +8), the
- *  accent (+22), the edges (border/input, +47), and primary-foreground
+ *  itself, the raised surfaces (card/popover/secondary/muted, +6), the
+ *  hover accent (+33), the edges (border/input, +20), and primary-foreground
  *  (the inverted text on primary = the background's own color, as today). */
 export function derivedPalette(background: string): Record<string, string> {
-	const card = raise(background, 8);
-	const accent = raise(background, 22);
-	const border = raise(background, 47);
+	const card = raise(background, 6);
+	const accent = raise(background, 33);
+	const border = raise(background, 20);
 	return {
 		"--background": background,
 		"--card": card,
@@ -82,16 +84,16 @@ export function appearanceVars(a: ReturnType<typeof resolveAppearance>): Record<
 	}
 	// The ONE documented reading-size variable (typography round 4): prose,
 	// inputs, and session titles all read it, so one setProperty moves them.
-	vars["--lh-prose-size"] = `${a.proseFontSize}px`;
+	vars["--kiln-prose-size"] = `${a.proseFontSize}px`;
 	// Session names: CMU Serif by default; the toggle swaps the title font
 	// to the prose family — covers chat.tsx + new-session.tsx titles with
 	// zero component edits (they use the .font-title utility).
 	if (!a.sessionNameSerif) vars["--font-title"] = "var(--font-prose)";
 	// Markdown rendering: heading weight + the emphasis inks (the vars
 	// were built "ready for the settings UI").
-	vars["--lh-heading-weight"] = String(a.mdRendering.headingWeight);
-	if (a.mdRendering.boldColor !== null) vars["--lh-ink-strong"] = a.mdRendering.boldColor;
-	if (a.mdRendering.italicColor !== null) vars["--lh-ink-italic"] = a.mdRendering.italicColor;
+	vars["--kiln-heading-weight"] = String(a.mdRendering.headingWeight);
+	if (a.mdRendering.boldColor !== null) vars["--kiln-ink-strong"] = a.mdRendering.boldColor;
+	if (a.mdRendering.italicColor !== null) vars["--kiln-ink-italic"] = a.mdRendering.italicColor;
 	return vars;
 }
 

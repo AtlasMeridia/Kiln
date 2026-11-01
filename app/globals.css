@@ -1,3 +1,12 @@
+/* Minerali v6.5 — atlas-design token source of truth, byte-for-byte copy.
+   FIRST, before tailwindcss: the file's own Google Fonts @import (line 17)
+   must land ahead of all rules in the bundle or Lightning CSS refuses to
+   parse it; behind Tailwind it sat ~3000 lines deep. Cascade note: with
+   the token file first, Tailwind's preflight overrides the token file's
+   ELEMENT defaults (h1–h4 sizes, b/strong) — tokens, themes, and .mn-*
+   classes are unaffected (vars and class selectors beat preflight).
+   Never edit this copy; fixes go to atlas-design first. */
+@import "./colors_and_type.css";
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -11,7 +20,7 @@
  *   - The type scale below is a declared modular ladder (each --text-* token
  *     carries its own line-height); components never invent pixel sizes.
  *   - Radii ladder is 4 / 8 / 12 / 16px multiples of the 4px base.
- *   - Emphasis colors live in tokens (--lh-ink-strong / --lh-ink-italic) so a
+ *   - Emphasis colors live in tokens (--kiln-ink-strong / --kiln-ink-italic) so a
  *     future settings UI reassigns them (configurable per the owner).
  */
 
@@ -27,99 +36,97 @@
 	outline: none;
 }
 
-/* Palette (owner's hexes): main #141414, raised #1C1C1C, edges #434343.
-   Mono chrome = JetBrains Mono; prose = Source Sans 3; titles = CMU Serif. */
+/* Minerali graphite (fork, 2026-10-31): factory values resolve through the
+   atlas-design token file imported above. The app keeps its shadcn token
+   NAMES; only the values change. Kiln's "accent" is a raised hover surface
+   (not a signal color) → --mn-smoke, the warm step above --bg-elevated;
+   Minerali's rust/acid signals land in the shape pass. */
 :root {
 	color-scheme: dark;
-	--radius: 8px;
-	--background: #141414;
-	--foreground: #e6e6e6;
-	--card: #1c1c1c;
-	--card-foreground: #e6e6e6;
-	--popover: #1c1c1c;
-	--popover-foreground: #e6e6e6;
-	--primary: #e6e6e6;
-	--primary-foreground: #141414;
-	--secondary: #1c1c1c;
-	--secondary-foreground: #e6e6e6;
-	--muted: #1c1c1c;
-	--muted-foreground: #8d8d8d;
-	--accent: #2a2a2a;
-	--accent-foreground: #e6e6e6;
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: #434343;
-	--input: #434343;
-	--ring: #8d8d8d;
-	/* Emphasis inks default to the REGULAR TEXT COLOR (owner ruling,
-	   appearance wave 2026-09-26 — the old #ee928c/#6fa9d6 factory
-	   emphasis colors are gone). Explicit overrides land via the
-	   appearance settings vars. */
-	--lh-ink-strong: var(--foreground);
-	--lh-ink-italic: var(--foreground);
+	--radius: 0px;
+	--background: var(--bg-primary);
+	--foreground: var(--text-primary);
+	--card: var(--bg-elevated);
+	--card-foreground: var(--text-primary);
+	--popover: var(--bg-elevated);
+	--popover-foreground: var(--text-primary);
+	--primary: var(--text-primary);
+	--primary-foreground: var(--bg-primary);
+	--secondary: var(--bg-elevated);
+	--secondary-foreground: var(--text-primary);
+	--muted: var(--bg-deep);
+	--muted-foreground: var(--text-muted);
+	--accent: var(--mn-smoke);
+	--accent-foreground: var(--text-primary);
+	--destructive: var(--error);
+	--border: var(--border-color);
+	--input: var(--border-color);
+	--ring: var(--accent-cut);
+	/* Emphasis inks (appearance settings can override both): strong stays
+	   the text color — weight carries bold; italic takes Minerali rust,
+	   the one emphasis color channel. */
+	--kiln-ink-strong: var(--foreground);
+	--kiln-ink-italic: var(--accent-text);
 	/* THE READING SIZE = the ladder's 16px rung (--text-lg). Can't be
 	   var()-linked: @theme inline inlines literals into utilities without
 	   emitting runtime vars — so this is the one documented duplication:
 	   change one, change both. (owner, typography round 4: snapped from
 	   the reskin's hand-tuned 16.5 to the ladder's 16.) */
-	--lh-prose-size: 16px;
-	--lh-prose-leading: 1.5;
+	--kiln-prose-size: 16px;
+	--kiln-prose-leading: 1.5;
 	/* Markdown heading weight (appearance settings; 900 = the Black cut). */
-	--lh-heading-weight: 900;
+	--kiln-heading-weight: 900;
 }
 
 /* The app is always dark (<html class="dark">); mirror the same values so
    the block stays coherent under Tailwind's variant. */
 .dark {
-	--background: #141414;
-	--foreground: #e6e6e6;
-	--card: #1c1c1c;
-	--card-foreground: #e6e6e6;
-	--popover: #1c1c1c;
-	--popover-foreground: #e6e6e6;
-	--primary: #e6e6e6;
-	--primary-foreground: #141414;
-	--secondary: #1c1c1c;
-	--secondary-foreground: #e6e6e6;
-	--muted: #1c1c1c;
-	--muted-foreground: #8d8d8d;
-	--accent: #2a2a2a;
-	--accent-foreground: #e6e6e6;
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: #434343;
-	--input: #434343;
-	--ring: #8d8d8d;
-	/* Same emphasis ruling as the block above: unset = text color. */
-	--lh-ink-strong: var(--foreground);
-	--lh-ink-italic: var(--foreground);
+	/* Mirror of :root (the app is always dark, <html class="dark">): the
+	   values resolve through the same Minerali tokens, so this block can
+	   never drift from the factory block above. */
+	--background: var(--bg-primary);
+	--foreground: var(--text-primary);
+	--card: var(--bg-elevated);
+	--card-foreground: var(--text-primary);
+	--popover: var(--bg-elevated);
+	--popover-foreground: var(--text-primary);
+	--primary: var(--text-primary);
+	--primary-foreground: var(--bg-primary);
+	--secondary: var(--bg-elevated);
+	--secondary-foreground: var(--text-primary);
+	--muted: var(--bg-deep);
+	--muted-foreground: var(--text-muted);
+	--accent: var(--mn-smoke);
+	--accent-foreground: var(--text-primary);
+	--destructive: var(--error);
+	--border: var(--border-color);
+	--input: var(--border-color);
+	--ring: var(--accent-cut);
+	--kiln-ink-strong: var(--foreground);
+	--kiln-ink-italic: var(--accent-text);
 	/* THE READING SIZE = the ladder's 16px rung (--text-lg). Can't be
 	   var()-linked: @theme inline inlines literals into utilities without
 	   emitting runtime vars — so this is the one documented duplication:
 	   change one, change both. (owner, typography round 4: snapped from
 	   the reskin's hand-tuned 16.5 to the ladder's 16.) */
-	--lh-prose-size: 16px;
-	--lh-prose-leading: 1.5;
+	--kiln-prose-size: 16px;
+	--kiln-prose-leading: 1.5;
 	/* Markdown heading weight (appearance settings; 900 = the Black cut). */
-	--lh-heading-weight: 900;
-}
-
-/* CMU Serif bold (titles) — bundled local file, no CDN dependency. */
-@font-face {
-	font-family: "lh-cmu";
-	src: url("/fonts/cmunbx.ttf") format("truetype");
-	font-weight: 700;
-	font-style: normal;
-	font-display: swap;
+	--kiln-heading-weight: 900;
 }
 
 @theme inline {
-	/* Fonts: chrome = JetBrains Mono, prose = Source Sans 3, titles = CMU
-	   Serif bold. The JetBrains/SourceSans variables attach in app/layout.tsx.
-	   (owner, typography round) The Tailwind defaults are ALIASED to the app
-	   fonts: `font-mono`/`font-sans` utilities would otherwise fall to the
-	   SYSTEM stacks — a fourth font the app never chose — and streamdown's
-	   code-block chrome + mermaid-error + demo-card all use them. */
+	/* Fonts (Minerali, 2026-10-31): chrome = JetBrains Mono, prose =
+	   Literata, display/titles = Fraunces. The font variables attach in
+	   app/layout.tsx via next/font (self-hosted at build — the desktop
+	   app never hits a CDN). (owner, typography round) The Tailwind
+	   defaults are ALIASED to the app fonts: `font-mono`/`font-sans`
+	   utilities would otherwise fall to the SYSTEM stacks — and
+	   streamdown's code-block chrome + mermaid-error + demo-card all use
+	   them. --font-sans keeps Source Sans 3 for those incidental sans
+	   consumers; formal reading surfaces use --font-prose. */
 	--font-ui: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
-	--font-prose: var(--font-sans3), ui-sans-serif, system-ui, sans-serif;
+	--font-prose: var(--font-literata), Georgia, serif;
 	--font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
 	--font-sans: var(--font-sans3), ui-sans-serif, system-ui, sans-serif;
 	/* The modular type ladder — each size carries its own line-height.
@@ -128,10 +135,10 @@
 	   distinction with no visible difference, and 10px sits at the mono
 	   legibility floor; quiet labels get their quiet from color +
 	   tracking, not a notch of size. Reading prose = the 16px rung via
-	   --lh-prose-size.) */
+	   --kiln-prose-size.) */
 	/* --font-title lives in the NON-inline @theme below: inline tokens get
 	   their literal values baked into the utilities (.font-title{font-family:
-	   lh-cmu,serif}), which made the appearance "session names in serif"
+	   kiln-cmu,serif}), which made the appearance "session names in serif"
 	   toggle write a runtime --font-title no consumer ever read (owner, fix
 	   wave: toggle looked dead). Non-inline emits :root { --font-title: … }
 	   and the utility reads var(--font-title) — appearance overrides win. */
@@ -149,12 +156,13 @@
 	--text-2xl--line-height: 1.3;
 	--text-3xl: 32px;
 	--text-3xl--line-height: 1.25;
-	/* Radii ladder — 4/8/12/16 multiples of the 4px base. */
-	--radius-sm: 4px;
-	--radius-md: 8px;
-	--radius-lg: 12px;
-	--radius-xl: 16px;
-	--radius: 8px;
+	/* Radii (Minerali): square — 0 everywhere, the single 2px concession
+	   for the largest containers. */
+	--radius-sm: 0px;
+	--radius-md: 0px;
+	--radius-lg: 2px;
+	--radius-xl: 2px;
+	--radius: 0px;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -183,15 +191,20 @@ body {
 	background: var(--color-background);
 	color: var(--color-foreground);
 	font-family: var(--font-ui);
+	/* Minerali's base styles set 18px on body (its --text-base, a reading
+	   size); Kiln's chrome runs on its own compact ladder, and the factory
+	   behavior was the browser default — pin it so unstyled text keeps the
+	   size it had before the token adoption. */
+	font-size: 16px;
 }
 
-/* Teaching prose (the markdown renderer's container gets .lh-prose):
+/* Teaching prose (the markdown renderer's container gets .kiln-prose):
    Source Sans 3 with the size/leading tokens; emphasis color bound to
    the settings-ready tokens. */
-.lh-prose {
+.kiln-prose {
 	font-family: var(--font-prose);
-	font-size: var(--lh-prose-size);
-	line-height: var(--lh-prose-leading);
+	font-size: var(--kiln-prose-size);
+	line-height: var(--kiln-prose-leading);
 }
 
 /* Session-name weight (owner, fix wave round 3): with the serif toggle
@@ -204,13 +217,13 @@ body {
 	font-weight: 900;
 }
 
-.lh-prose :where(strong, b) {
-	color: var(--lh-ink-strong);
+.kiln-prose :where(strong, b) {
+	color: var(--kiln-ink-strong);
 	font-weight: 700;
 }
 
-.lh-prose :where(em, i) {
-	color: var(--lh-ink-italic);
+.kiln-prose :where(em, i) {
+	color: var(--kiln-ink-italic);
 }
 
 /* Markdown lists indent from the prose edge (owner ask, 2026-09-24):
@@ -219,7 +232,7 @@ body {
    [li_&]). 24px — the same measure as that nested-case pl-6 — pulls
    the whole list right as a block. Unlayered CSS beats the utility
    layer; :where keeps specificity zero. */
-.lh-prose :where(ul, ol) {
+.kiln-prose :where(ul, ol) {
 	padding-left: 1.5rem;
 }
 
@@ -228,21 +241,21 @@ body {
    Source Sans 3 axis spans 200–900 (next/font loads the full range), so
    900 draws the real Black cut. Unlayered CSS beats the utility layer;
    :where keeps specificity zero. Chrome titles (CMU Serif) don't live
-   under .lh-prose and stay untouched. */
-.lh-prose :where(h1, h2, h3, h4, h5, h6) {
-	font-weight: var(--lh-heading-weight, 900);
+   under .kiln-prose and stay untouched. */
+.kiln-prose :where(h1, h2, h3, h4, h5, h6) {
+	font-weight: var(--kiln-heading-weight, 900);
 }
 
-/* lh-input (owner, typography round 2): lh-prose's 1.5 READING leading
+/* kiln-input (owner, typography round 2): kiln-prose's 1.5 READING leading
    makes typing carets tower over the glyphs — the caret fills the line
    box (24px at 16px text, ~2× the glyph height). Inputs are not
    paragraphs: a tighter 1.25 leading brings the caret to the font-metric
    floor (~20px, as close to the glyphs as Chromium will draw it) while
    wrapped lines in growing textareas still read fine. Rendered prose keeps
    1.5 — the two share family and size, they differ only in leading. */
-.lh-input {
+.kiln-input {
 	font-family: var(--font-prose);
-	font-size: var(--lh-prose-size);
+	font-size: var(--kiln-prose-size);
 	line-height: 1.25;
 }
 
@@ -363,7 +376,7 @@ body {
 	   visibly lagged the 16px chat text at streamdown's 12.5px text-sm).
 	   Unlayered CSS beats the cells' own utility-layer text-sm, and the
 	   :where keeps specificity zero — the override wins on layering alone. */
-	font-size: var(--lh-prose-size);
+	font-size: var(--kiln-prose-size);
 }
 [data-streamdown="table"] :where(th, td) {
 	font-size: inherit;
@@ -387,7 +400,7 @@ body {
    overriding mermaid's inline max-width cap. Later + same-specificity
    than the column rule above, so the !important tie breaks our way; the
    overlay's svg never sits under [data-streamdown="mermaid"] anyway. */
-[data-lh-overlay-chart] svg {
+[data-kiln-overlay-chart] svg {
 	max-width: none !important;
 	width: 100% !important;
 	height: auto !important;
@@ -488,26 +501,26 @@ body {
    Electron merged chrome (owner, 2026-09-17). The system title bar is
    hidden (macOS hiddenInset; Windows/Linux hidden + native controls
    overlay in electron/main.cjs); the app's 60px bands are the drag surface.
-   Everything here is inert in the plain browser — it keys off <html class="lh-electron">, which
+   Everything here is inert in the plain browser — it keys off <html class="kiln-electron">, which
    SidebarProvider sets after mount when it detects the Electron shell.
 
-   - .lh-drag        window-drag region — on a dedicated mask div in
+   - .kiln-drag        window-drag region — on a dedicated mask div in
                        home.tsx placed FIRST in the page DOM (the mask
                        resolves by DOM order, not z-index: no-drag subtracts
                        only regions added earlier in the tree)
-   - .lh-no-drag     carve-out for interactive elements inside a drag band
+   - .kiln-no-drag     carve-out for interactive elements inside a drag band
                        (native interactive elements carve out AUTOMATICALLY —
                        see the auto carve-out rule below; manual use is for
                        clickable non-natives only)
-   - .lh-lights-gutter  the sidebar LH band's traffic-light gutter: lights
+   - .kiln-lights-gutter  the sidebar Kiln band's traffic-light gutter: lights
                        end at x≈68, the wordmark starts at 80px (5rem)
-   - .lh-closed-toggle  same gutter for the sidebar toggle when the sidebar
+   - .kiln-closed-toggle  same gutter for the sidebar toggle when the sidebar
                        is closed — the lights are static, the toggle moves
    ───────────────────────────────────────────────────────────────────────── */
-.lh-electron .lh-drag {
+.kiln-electron .kiln-drag {
 	-webkit-app-region: drag;
 }
-.lh-electron .lh-no-drag {
+.kiln-electron .kiln-no-drag {
 	-webkit-app-region: no-drag;
 }
 /* THE AUTO CARVE-OUT (owner standardization ruling, 2026-09-29 night):
@@ -515,52 +528,52 @@ body {
    a no-drag island — "draggable anywhere that is not a clickable
    element" becomes structural, not per-child discipline. TopBar
    contents can differ arbitrarily; buttons/inputs/links always stay
-   clickable with zero opt-out bookkeeping. Manual .lh-no-drag remains
+   clickable with zero opt-out bookkeeping. Manual .kiln-no-drag remains
    only for clickable NON-native elements (spans/divs with onClick —
    e.g. the graph chrome's control column). */
-.lh-electron .lh-drag :is(button, input, textarea, select, a, summary, [contenteditable]) {
+.kiln-electron .kiln-drag :is(button, input, textarea, select, a, summary, [contenteditable]) {
 	-webkit-app-region: no-drag;
 }
 /* 92px = measured lights' right edge (~75pt) + the lights' own 16px
    inset from the window edge — comfortable, symmetric air (owner).
    PHYSICAL-CONSTANT under zoom (owner round 7, 2026-10-05): ⌘±/⌘0 scale
    every CSS px by the zoomFactor while the native lights never move —
-   so these lengths DIVIDE by --lh-zoom (published by the renderer from
-   the lh:zoom IPC) to render at the same physical size at every zoom.
+   so these lengths DIVIDE by --kiln-zoom (published by the renderer from
+   the kiln:zoom IPC) to render at the same physical size at every zoom.
    The graph button stays glued next to the lights zoomed in; nothing
    slides under them zoomed out. Default 1 until the first push lands. */
-.lh-electron {
-	--lh-zoom: 1;
+.kiln-electron {
+	--kiln-zoom: 1;
 }
-.lh-electron[data-lh-platform="darwin"] .lh-lights-gutter {
-	padding-left: calc(92px / var(--lh-zoom));
+.kiln-electron[data-kiln-platform="darwin"] .kiln-lights-gutter {
+	padding-left: calc(92px / var(--kiln-zoom));
 }
-.lh-electron[data-lh-platform="darwin"] .lh-closed-toggle {
-	margin-left: calc(92px / var(--lh-zoom));
+.kiln-electron[data-kiln-platform="darwin"] .kiln-closed-toggle {
+	margin-left: calc(92px / var(--kiln-zoom));
 }
 
 /* Windows/Linux Window Controls Overlay: Chromium publishes the usable
    titlebar rectangle in CSS coordinates (including resize/zoom changes).
    Reserve the native buttons' actual right-side extent, no fixed width
    and no second zoom division. The env fallbacks make fullscreen/absent
-   overlay a zero gutter. Keep this independent of .lh-drag: rename mode
+   overlay a zero gutter. Keep this independent of .kiln-drag: rename mode
    still needs to clear the native buttons when dragging is disabled. */
-.lh-electron:is([data-lh-platform="win32"], [data-lh-platform="linux"]) {
-	--lh-wco-right: max(0px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)));
+.kiln-electron:is([data-kiln-platform="win32"], [data-kiln-platform="linux"]) {
+	--kiln-wco-right: max(0px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)));
 }
-.lh-electron .lh-wco-gutter {
-	padding-right: calc(0.75rem + var(--lh-wco-right, 0px));
+.kiln-electron .kiln-wco-gutter {
+	padding-right: calc(0.75rem + var(--kiln-wco-right, 0px));
 }
-.lh-electron .lh-wco-floating {
-	right: calc(0.5rem + var(--lh-wco-right, 0px));
-	max-width: max(0px, calc(100% - 5.5rem - var(--lh-wco-right, 0px)));
+.kiln-electron .kiln-wco-floating {
+	right: calc(0.5rem + var(--kiln-wco-right, 0px));
+	max-width: max(0px, calc(100% - 5.5rem - var(--kiln-wco-right, 0px)));
 }
 
 /* --font-title deliberately NOT @theme inline (see comment above): the
    session-name-serif toggle overrides this var at runtime, so the
    .font-title utility must read it through var(), not carry a baked copy. */
 @theme {
-	--font-title: "lh-cmu", serif;
+	--font-title: var(--font-fraunces), "Fraunces", Georgia, serif;
 }
 
 /* Card enter (owner round, 2026-10-05): the transcript cards' one-shot
@@ -568,7 +581,7 @@ body {
    dock-variant/settings-pop taste). Nothing on update, nothing on
    unmount. Applied by the unified ThinkingBlock and the practice
    cards; honors reduced-motion by appearing. */
-@keyframes lh-card-enter {
+@keyframes kiln-card-enter {
 	from {
 		opacity: 0;
 		transform: translateY(4px);
@@ -579,21 +592,21 @@ body {
 	}
 }
 
-.lh-card-enter {
-	animation: lh-card-enter 120ms ease-out;
+.kiln-card-enter {
+	animation: kiln-card-enter 120ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.lh-card-enter {
+	.kiln-card-enter {
 		animation: none;
 	}
 }
 
 /* Source-message arrival: a brief, static theme-colored spotlight. */
-.lh-source-passage {
+.kiln-source-passage {
 	scroll-margin-top: 1rem;
 }
-.lh-source-highlight {
+.kiln-source-highlight {
 	background-color: var(--accent);
 	outline: 1px solid var(--border);
 	border-radius: 0.25rem;
