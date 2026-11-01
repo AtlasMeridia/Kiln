@@ -1079,7 +1079,7 @@ describe("tool + renderer registry wiring", () => {
 		assert.ok(html.includes("<details"), "collapsed by default via a details element");
 	});
 
-	it("the tool-call card: image-bearing read results note the attachment; errors render red", () => {
+	it("the tool-call card: image-bearing read results note the attachment; errors render destructive", () => {
 		const imgPart = {
 			type: "tool-read",
 			state: "output-available",
@@ -1102,7 +1102,7 @@ describe("tool + renderer registry wiring", () => {
 		const errHtml = renderToStaticMarkup(<ToolCallCard part={errPart as never} />);
 		assert.match(errHtml, /Error/);
 		assert.match(errHtml, /ENOENT/);
-		assert.match(errHtml, /text-red-500/);
+		assert.match(errHtml, /text-destructive/);
 	});
 
 	it("the tool-call card: find/grep headline the pattern, ls defaults to ~", () => {

@@ -309,7 +309,7 @@ export function SessionRow({
 			data-testid={kbdSelected ? "session-row-kbd" : "session-row"}
 			className={cn(
 				"relative mb-0.5 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent",
-				active && "bg-accent",
+				active && "bg-accent text-foreground before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[var(--accent-cut)]",
 				kbdSelected && !active && "bg-accent/60 ring-1 ring-border",
 			)}
 		>
@@ -350,7 +350,7 @@ export function RenameRow({ chat, onCommit, onCancel }: { chat: ChatListItem; on
 	return (
 		<div
 			data-testid="session-rename-row"
-			className="relative mb-0.5 flex w-full items-center rounded-lg bg-accent px-3 py-2"
+			className="relative mb-0.5 flex w-full items-center rounded-lg bg-accent px-3 py-2 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-[var(--accent-cut)]"
 		>
 			{/* NOTHING MOVES (owner, polish round): an idle row renders no
 			    status spacer (SessionStatus is null when not busy), so the
@@ -797,7 +797,7 @@ function SessionsSidebar() {
 							className={cn(
 								"flex-1 rounded-sm px-2 py-1 text-[11px] uppercase tracking-wider transition-colors",
 								kindFilter === f
-									? "bg-accent text-foreground"
+									? "bg-[var(--accent-cut)] text-[var(--mn-ink)]"
 									: "text-muted-foreground hover:text-foreground",
 							)}
 						>

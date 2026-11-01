@@ -11,8 +11,9 @@ import { PathInput } from "@/components/path-input";
  * the chat view's overlay, so the shell can later morph chat → question
  * without remounting).
  *
- * Corner-radius math (concentric with the shell): shell rounded-2xl (16px) −
- * row padding p-1.5 (6px) = button rounded-[10px] = 25% of the 40px button.
+ * Corner radii (Minerali): the shell takes the 2px concession (rounded-lg)
+ * and every row inside it is square (rounded-none) — the old concentric math
+ * (shell 16px − row padding 6px = 10px button) no longer applies.
  */
 /** What one Enter press does, in precedence order: stop a busy stream,
  *  otherwise send the message, otherwise — practice sessions only — fire
@@ -192,16 +193,17 @@ export function Composer({
 
 				 THE NEXT MORPH (owner round 16 refinement, 2026-10-06): an
 				 empty composer in the practice pause morphs the button into
-				 a wide green NEXT PROBLEM — the affordance IS the button
+				 a wide acid NEXT PROBLEM — the affordance IS the button
 				 (click and Enter share one lane), and typing anything
-				 returns the regular send. The green is the app's correct-
-				 answer register (answered-card's green-500/600). */}
+				 returns the regular send. The acid fill is the app's
+				 go-ahead register (Minerali success = acid; answered-card
+				 matches via --color-success). */}
 				{nextProblem && !busy && !canSend ? (
 					<button
 						type="submit"
 						data-testid="next-problem-button"
 						aria-label="Next problem"
-						className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-[10px] bg-green-600 px-4 font-ui text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-green-500"
+						className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-none bg-accent-cut px-4 font-ui text-xs font-medium uppercase tracking-wide text-[var(--mn-ink)] transition-opacity hover:opacity-90"
 					>
 						Next problem
 						<ArrowRightIcon className="size-4" />
@@ -212,7 +214,7 @@ export function Composer({
 						aria-label={busy && !canSend ? "Stop" : "Send"}
 						disabled={!busy && !canSend}
 						className={cn(
-							"flex size-10 shrink-0 items-center justify-center rounded-[10px] transition-colors",
+							"flex size-10 shrink-0 items-center justify-center rounded-none transition-colors",
 							busy && !canSend
 								? "bg-secondary text-foreground hover:bg-accent"
 								: "bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40",

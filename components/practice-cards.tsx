@@ -81,15 +81,16 @@ const OUTCOME_LABEL: Record<string, string> = {
 };
 
 /* The outcome chips (owner round 3, 2026-10-05): the EXACT register of the
- * quiz cards' correct/incorrect bubbles. Colors per outcome — solved reads
- * green (the "correct" twin), solved-with-hints amber (succeeded with
- * cost), surrendered red (the problem beat the learner), moved on muted
- * (the agent's call, not a verdict against him). */
+ * quiz cards' correct/incorrect bubbles. Colors per outcome (Minerali
+ * semantic tokens, 2026-11-01) — solved reads success/acid (the "correct"
+ * twin), solved-with-hints warning (succeeded with cost), surrendered
+ * destructive (the problem beat the learner), moved on muted (the agent's
+ * call, not a verdict against him). */
 const OUTCOME_CHIP: Record<string, string> = {
-	solved: "bg-green-500/15 text-green-500",
-	solvedWithHints: "bg-amber-500/15 text-amber-500",
+	solved: "bg-success/15 text-success",
+	solvedWithHints: "bg-warning/15 text-warning",
 	movedOn: "bg-muted text-muted-foreground",
-	surrendered: "bg-red-500/15 text-red-500",
+	surrendered: "bg-destructive/15 text-destructive",
 	dismissed: "bg-muted text-muted-foreground",
 };
 
