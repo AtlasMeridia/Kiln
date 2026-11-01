@@ -25,7 +25,7 @@ import type { AnthropicEffort } from "@earendil-works/pi-ai/api/anthropic-messag
 import { parseStreamingJson, parseToolCallArguments } from "@earendil-works/pi-ai/utils/json-parse";
 
 import { externalCliEnv } from "../../core/auth-env.ts";
-import type { LhMessage } from "../../core/native-messages.ts";
+import type { KilnMessage } from "../../core/native-messages.ts";
 import { ClaudeLaunchError, createClaudeLauncher } from "./launch.ts";
 import { parseCliLine, type CliBlock, type CliEvent, type CliUsage } from "./cli-events.ts";
 import { ClaudeCodeError } from "./constants.ts";
@@ -142,7 +142,7 @@ function getAssistantErrorMessage(error: string, text: string): string {
 }
 
 class ClaudeTurn {
-	private readonly output: AssistantMessage & Pick<LhMessage, "cliContextWindow">;
+	private readonly output: AssistantMessage & Pick<KilnMessage, "cliContextWindow">;
 	private readonly contentIndexes = new Map<number, number>();
 	private readonly partialJson = new Map<number, string>();
 	private readonly toolBlocks = new Map<number, ToolCall>();
@@ -627,7 +627,7 @@ function continueLiveProcess(turn: ClaudeTurn, owner: symbol, sessionId: string 
 
 function toClaudeEnv(): NodeJS.ProcessEnv {
 	// Preserve native CLI auth/routing, including launch-environment credentials.
-	// Claude Code chooses the account and billing method, not LearnHarness.
+	// Claude Code chooses the account and billing method, not Kiln.
 	return { ...externalCliEnv(), MCP_TOOL_TIMEOUT: String(MCP_TOOL_TIMEOUT_MS), CLAUDE_CODE_MCP_TOOL_IDLE_TIMEOUT: String(MCP_TOOL_TIMEOUT_MS) };
 }
 

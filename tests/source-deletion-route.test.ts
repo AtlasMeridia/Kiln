@@ -4,9 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import { after, beforeEach, it } from "node:test";
 import type { GraphNode, SourceDirectory } from "../src/core/index.ts";
-const root = fs.mkdtempSync(path.join(os.tmpdir(), "lh-source-deletion-"));
-process.env.LH_DATA_DIR = root; process.env.LH_AUTH_FILE = path.join(root, "auth.json");
-fs.writeFileSync(process.env.LH_AUTH_FILE, "{}\n");
+const root = fs.mkdtempSync(path.join(os.tmpdir(), "kiln-source-deletion-"));
+process.env.KILN_DATA_DIR = root; process.env.KILN_AUTH_FILE = path.join(root, "auth.json");
+fs.writeFileSync(process.env.KILN_AUTH_FILE, "{}\n");
 const { DELETE } = await import("../app/api/graph/sources/route.ts");
 const { stores } = await import("../src/server/stores.ts");
 const { sourceDirectory } = await import("../src/server/source-organization.ts");
@@ -14,7 +14,7 @@ const { SOURCE_ORGANIZATION_FILE } = await import("../config.ts");
 const { beginTurn, endTurn } = await import("../src/server/turn-liveness.ts");
 const { sessionCoverage } = await import("../src/server/chats.ts");
 const { coverageSlots } = await import("../src/core/coverage.ts");
-beforeEach(() => { fs.rmSync(root, { recursive: true, force: true }); fs.mkdirSync(root); fs.writeFileSync(process.env.LH_AUTH_FILE!, "{}\n"); });
+beforeEach(() => { fs.rmSync(root, { recursive: true, force: true }); fs.mkdirSync(root); fs.writeFileSync(process.env.KILN_AUTH_FILE!, "{}\n"); });
 after(() => fs.rmSync(root, { recursive: true, force: true }));
 const remove = (sourceIds: string[], folderIds: string[] = [], deleteSessions = false) => DELETE(new Request("http://localhost/api/graph/sources", { method: "DELETE", body: JSON.stringify({ sourceIds, folderIds, deleteSessions }) }));
 function book(id: string) { stores.graphStore.upsertSource({ id, filePath: `${id}.md`, importedAt: "2026-10-30" }); }
@@ -121,14 +121,14 @@ it("preflights every selected session's running turn/jobs before deleting any se
 });
 it("refuses contribution deletion during extraction without cancelling it; metadata-only empty folder removal is safe", async () => {
 	book("a"); folders({});
-	const g = globalThis as { __lhExtractionRuns?: unknown }, saved = g.__lhExtractionRuns;
+	const g = globalThis as { __kilnExtractionRuns?: unknown }, saved = g.__kilnExtractionRuns;
 	const controller = new AbortController();
 	try {
-		g.__lhExtractionRuns = { running: new Map([["other", { chatId: "other", kind: "notes", phase: "extracting", startedAt: 1, usage: {}, controller }]]), inFlight: new Set(), lastStartedAt: 0 };
+		g.__kilnExtractionRuns = { running: new Map([["other", { chatId: "other", kind: "notes", phase: "extracting", startedAt: 1, usage: {}, controller }]]), inFlight: new Set(), lastStartedAt: 0 };
 		const response = await remove(["a"]); assert.equal(response.status, 409); assert.equal((await response.json()).code, "extraction_running");
 		assert.equal(controller.signal.aborted, false); assert.equal(stores.graphStore.readSources().length, 1);
 		assert.equal((await remove([], ["empty"])).status, 200);
-	} finally { g.__lhExtractionRuns = saved; }
+	} finally { g.__kilnExtractionRuns = saved; }
 });
 it("invalid and oversized bodies and corrupt organization refuse before destructive writes", async () => {
 	book("a"); folders({ a: { folderId: "inner" } });

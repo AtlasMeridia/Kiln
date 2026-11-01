@@ -114,8 +114,8 @@ export function MinimalHome({
 	}, []);
 	useEffect(() => {
 		readState();
-		window.addEventListener("lh:graph-revision", readState);
-		return () => window.removeEventListener("lh:graph-revision", readState);
+		window.addEventListener("kiln:graph-revision", readState);
+		return () => window.removeEventListener("kiln:graph-revision", readState);
 	}, [readState]);
 
 	// The practice chip opens the table in select mode (GraphView's law):
@@ -147,13 +147,13 @@ export function MinimalHome({
 			{/* The chrome survivors in the graph view's own places (owner,
 			    2026-10-06): the top-right column — actions row (Chains +
 			    Import, the same 36px band pills), the cost pill BELOW it.
-			    The column carries lh-no-drag EXACTLY like the graph
+			    The column carries kiln-no-drag EXACTLY like the graph
 			    chrome's (the DOM-order mask law): without it the drag band
 			    swallows the clicks in Electron — the buttons dragged the
 			    window instead. Node search and the render-settings gear are
 			    canvas things and stay gone; Import ALWAYS renders (the
 			    entry law). */}
-			<div className="lh-no-drag lh-wco-floating absolute right-2 top-2 z-10 flex max-w-[calc(100%-5.5rem)] flex-col items-end gap-2">
+			<div className="kiln-no-drag kiln-wco-floating absolute right-2 top-2 z-10 flex max-w-[calc(100%-5.5rem)] flex-col items-end gap-2">
 				<div className="flex min-w-0 items-start gap-2">
 					<div className="graph-chrome-fade-in shrink-0 rounded-xl border bg-card/85 px-1 py-[3px] shadow-lg backdrop-blur">
 						<Hint label="Every reasoning chain" side="bottom">

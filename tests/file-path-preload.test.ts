@@ -42,7 +42,7 @@ describe("path-only preload bridge", () => {
 		}
 		const fullPath = "/actual/course/notes with `backticks`.pdf";
 		const f = fixture((supplied) => { assert.equal(supplied, file); return fullPath; });
-		assert.deepEqual(f.exposed, ["lh"]);
+		assert.deepEqual(f.exposed, ["kiln"]);
 		assert.deepEqual(f.imports, ["electron"]);
 		assert.equal(f.bridge.getPathForFile(file), fullPath);
 		assert.equal(f.supplied.length, 1);

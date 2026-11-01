@@ -14,9 +14,9 @@ import { emit } from "../core/events.ts";
 import type { ChatStore } from "../core/ports.ts";
 import type { ChatRecord, ChatSettings, ChatSummary, ExtractionRunUsage, PlanTree, TurnUsage } from "../core/contracts.ts";
 import { CURRENT_CHAT_VERSION } from "../core/contracts.ts";
-import type { LhMessage } from "../core/native-messages.ts";
+import type { KilnMessage } from "../core/native-messages.ts";
 import { activeProblemOf, danglingQuestionOf } from "../core/native-messages.ts";
-import { phaseAt3Lh } from "../core/phases.ts";
+import { phaseAt3Kiln } from "../core/phases.ts";
 
 function chatFile(id: string): string {
 	if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error(`Invalid chat id: ${id}`);
@@ -102,10 +102,10 @@ function listChats(): ChatSummary[] {
 						// transcript's explicit events (probe_done concluded / verdict
 						// accepted — docs/probe-teach-split.md §4), pending question
 						// from the native dangling-call scan. Wave D: both folds read
-						// the NATIVE record (core/phases.ts phaseAt3Lh +
+						// the NATIVE record (core/phases.ts phaseAt3Kiln +
 						// native-messages.ts danglingQuestionOf). Liveness (busy) is
 						// NOT record-derived — the API route merges it (ChatListItem).
-						phase: phaseAt3Lh(messages),
+						phase: phaseAt3Kiln(messages),
 						pendingQuestion: danglingQuestionOf(messages) !== null,
 					};
 				} catch (err) {
@@ -123,7 +123,7 @@ function listChats(): ChatSummary[] {
 /** Persist the full native message list (the record IS the agent state —
  *  Wave B: replay is state.messages = record.messages). SILENT by the
  *  events law — see the SILENCE LAW comment at createChat. */
-function saveMessages(id: string, messages: LhMessage[]): void {
+function saveMessages(id: string, messages: KilnMessage[]): void {
 	const record = getChat(id);
 	if (!record) throw new Error(`Chat not found: ${id}`);
 	record.messages = messages;

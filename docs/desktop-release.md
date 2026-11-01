@@ -4,15 +4,15 @@
 
 | Platform | Build runner | Packages | In-app update |
 |---|---|---|---|
-| macOS, Apple Silicon | `macos-26` (arm64) | signed/notarized DMG + ZIP | ZIP via Squirrel.Mac |
+| macOS, Apple Silicon | `macos-26` (arm64) | DMG + ZIP (signed/notarized only when Apple signing secrets are configured) | ZIP via Squirrel.Mac |
 | Windows, x64 | `windows-2025` | unsigned per-user NSIS installer | NSIS |
 | Linux, x64 | `ubuntu-24.04` | AppImage + `.deb` | AppImage replacement; `.deb` through dpkg/apt with elevation if needed |
 
-Windows signing is deliberately disabled. SmartScreen may warn about an unknown publisher on initial installation. AppImage is the primary Linux download because it is self-contained and updates without administrator permission. `.deb` updates may request an administrator password. Both use the same download/restart banner. Package targets and signing settings live in [`electron-builder.yml`](../electron-builder.yml); see [`package.json`](../package.json) and the lockfile for current tool versions.
+Windows signing is deliberately disabled. SmartScreen may warn about an unknown publisher on initial installation. macOS signing/notarization is env-driven and applies only when this fork's own Apple credentials are configured; until then the fork ships unsigned builds. AppImage is the primary Linux download because it is self-contained and updates without administrator permission. `.deb` updates may request an administrator password. Both use the same download/restart banner. Package targets and signing settings live in [`electron-builder.yml`](../electron-builder.yml); see [`package.json`](../package.json) and the lockfile for current tool versions.
 
 The custom app bar stays on all three platforms. macOS keeps its left-side traffic lights; Windows/Linux use Electron's native right-side Window Controls Overlay, with CSS space reserved from the overlay's actual geometry. Windows/Linux hide the native menu until Alt is pressed. macOS keeps its system menu.
 
-Icons are per-platform (2026-10-13): macOS compiles the Icon Composer document `build/icon.icon` via actool into `Assets.car` (macOS 26 Liquid Glass) plus a fallback icns that `scripts/after-pack.cjs` replaces with the hand-packed full-res `build/icon.icns` (actool's caps at 256px); Windows embeds `build/icon.ico` and Linux uses `build/icon.png`, both generated from the flat design (`build/icon-flat.svg`) by `node scripts/make-icons.mjs`. Building the mac icon needs **macOS 26+ and Xcode 26+** (`actool`): Xcode 26's asset compiler crashes on macOS 15 because its host frameworks lack required symbols. `desktop:dist` injects `DEVELOPER_DIR` locally; release packaging uses `macos-26` and selects Xcode via setup-xcode. The older-OS fallback icon remains included. Linux's desktop identity is `learnharness.desktop`. Public package-maintainer metadata uses the owner's GitHub no-reply address; support goes through [GitHub Issues](https://github.com/amosblomqvist/learnharness/issues).
+Icons are per-platform (2026-10-13): macOS compiles the Icon Composer document `build/icon.icon` via actool into `Assets.car` (macOS 26 Liquid Glass) plus a fallback icns that `scripts/after-pack.cjs` replaces with the hand-packed full-res `build/icon.icns` (actool's caps at 256px); Windows embeds `build/icon.ico` and Linux uses `build/icon.png`, both generated from the flat design (`build/icon-flat.svg`) by `node scripts/make-icons.mjs`. Building the mac icon needs **macOS 26+ and Xcode 26+** (`actool`): Xcode 26's asset compiler crashes on macOS 15 because its host frameworks lack required symbols. `desktop:dist` injects `DEVELOPER_DIR` locally; release packaging uses `macos-26` and selects Xcode via setup-xcode. The older-OS fallback icon remains included. Linux's desktop identity is `kiln.desktop`. Public package-maintainer metadata uses the owner's GitHub no-reply address; support goes through [GitHub Issues](https://github.com/AtlasMeridia/Kiln/issues).
 
 ## Build pipeline
 
@@ -38,7 +38,7 @@ Image resizing uses the shipped Photon 0.3.4 JS/WASM engine and unbundled worker
 
 ### Local packaging
 
-`npm run desktop:dist` is the local macOS signing path, using the `LH_NOTARY` keychain profile. It clears local `dist` and `.next/standalone`, builds, checks the fresh provider trace, curates the payload, runs the server smoke under host Node, then packages. Unlike CI's `--electron` smoke, that script does not itself check Electron's Node runtime or run the post-package probes. It has no publish flag and is not the tag-upload workflow.
+`npm run desktop:dist` is the local macOS packaging path. Notarization is env-driven in this fork: the script passes `-c.mac.notarize=true` to electron-builder **only** when both `APPLE_TEAM_ID` and `APPLE_KEYCHAIN_PROFILE` are set, so a local build without Apple credentials succeeds and produces an unsigned app (the fork ships no bundled notary keychain profile). It clears local `dist` and `.next/standalone`, builds, checks the fresh provider trace, curates the payload, runs the server smoke under host Node, then packages. Unlike CI's `--electron` smoke, that script does not itself check Electron's Node runtime or run the post-package probes. It has no publish flag and is not the tag-upload workflow.
 
 For a local Windows/Linux build, run steps 1–6 above, then:
 
@@ -73,11 +73,11 @@ The three jobs upload distinct updater feeds: `latest-mac.yml`, `latest.yml`, `l
 
 | Asset | Role |
 |---|---|
-| `LearnHarness-<v>-arm64.dmg` + `.blockmap` | macOS installer |
-| `LearnHarness-<v>-arm64-mac.zip` + `.blockmap` | macOS updater payload (Squirrel.Mac installs from the ZIP) |
-| `LearnHarness-<v>-x64-setup.exe` + `.blockmap` | Windows NSIS installer |
-| `LearnHarness-<v>-x86_64.AppImage` | Linux AppImage (no sidecar blockmap) |
-| `LearnHarness-<v>-amd64.deb` | Linux deb (no sidecar blockmap) |
+| `Kiln-<v>-arm64.dmg` + `.blockmap` | macOS installer |
+| `Kiln-<v>-arm64-mac.zip` + `.blockmap` | macOS updater payload (Squirrel.Mac installs from the ZIP) |
+| `Kiln-<v>-x64-setup.exe` + `.blockmap` | Windows NSIS installer |
+| `Kiln-<v>-x86_64.AppImage` | Linux AppImage (no sidecar blockmap) |
+| `Kiln-<v>-amd64.deb` | Linux deb (no sidecar blockmap) |
 | `latest-mac.yml` / `latest.yml` / `latest-linux.yml` | updater feeds |
 
   (The Linux names are deliberate: `linux.artifactName` applies to both targets, and `${arch}` expands to `x86_64` for AppImage and `amd64` for deb. The validator fails closed if `electron-builder.yml` drifts from the verified shapes.);
@@ -95,7 +95,9 @@ Add these under repository **Settings → Secrets and variables → Actions**:
 | `MAC_CSC_KEY_PASSWORD` | Password protecting that `.p12` |
 | `APPLE_ID` | Apple ID used for notarization |
 | `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password for that Apple ID |
-| `APPLE_TEAM_ID` | `JS6XN22HY6` |
+| `APPLE_TEAM_ID` | Apple Developer team ID for this fork's own Apple account |
+
+These must belong to this fork's own Apple Developer account; upstream's certificate and team ID cannot sign this fork's builds. Until the fork has its own certificate, the tag-release macOS job fails its secret gate, while local and manual/rehearsal builds stay unsigned by design.
 
 The workflow maps the certificate secrets to electron-builder's `CSC_LINK` / `CSC_KEY_PASSWORD`. GitHub's built-in `GITHUB_TOKEN` supplies `GH_TOKEN` with job-scoped `contents: write`; no separate GitHub token secret is required. Signing credentials are present only for the packaging step, not the Next build. Never commit certificates, passwords, or `.env.local`.
 
@@ -105,14 +107,14 @@ The workflow maps the certificate secrets to electron-builder's `CSC_LINK` / `CS
 2. Update `package.json` and the lockfile to the agreed version. Run the normal gates, ensure the intended source is on main, and push the authorized matching `v<version>` tag. Confirm signing/notarization secrets are configured before a production macOS build.
 3. Wait for **all three** packaging jobs **and Verify draft release**. Inspect the single draft's notes, tag, 11 assets, and three feeds. If a gate fails, diagnose before retrying or publishing; re-uploads replace same-named assets, but stale extra assets fail validation. Do not treat deletion, cleanup, or publication as a harmless verification step.
 4. If an authorized draft metadata edit is needed, **include the explicit canonical `tag_name: "v<version>"` in every metadata PATCH**, even when changing only the title/body. Omitting it has reset release tags in past releases. Re-read the draft afterward to confirm tag identity, draft status, and assets. A tag correction is a metadata change, not permission to delete/recreate a release.
-5. Owner checks the actual packaged build as needed and explicitly publishes the complete draft. Confirm public installer/update-feed availability and the website download links. Use a prior installed version when checking the real update path.
+5. Owner checks the actual packaged build as needed and explicitly publishes the complete draft. Confirm public installer/update-feed availability and the GitHub Releases download links. Use a prior installed version when checking the real update path.
 
 Changes to the shell, native modules, packaging/updater configuration, or Electron itself warrant relevant platform smoke checks: install/open, window controls/dragging, zoom, setup and session resume, native PDF/SVG tools, and the demo helper. Offline fixture gates prove their exercised paths, not real account/provider functionality; do not repeat already accepted feature testing without a concrete risk.
 
-## In-app updates and website notification
+## In-app updates
 
-Packaged apps check at startup and every 24 hours by default, download available updates automatically, and install downloaded updates on quit or through Restart. **Settings → General** shows version/release notes, manual Check for updates, status, and Automatic updates. Turning automatic checks off does not cancel downloads or staged installs; a manual check still downloads available updates. Development builds disable the updater. Errors are logged to `userData/logs/main.log` without taking down the app. The test-only `LH_UPDATE_FEED` environment override points to a generic feed for an authorized local update drill.
+Packaged apps check at startup and every 24 hours by default, download available updates automatically, and install downloaded updates on quit or through Restart. **Settings → General** shows version/release notes, manual Check for updates, status, and Automatic updates. Turning automatic checks off does not cancel downloads or staged installs; a manual check still downloads available updates. Development builds disable the updater. Errors are logged to `userData/logs/main.log` without taking down the app. The test-only `KILN_UPDATE_FEED` environment override points to a generic feed for an authorized local update drill.
 
 Sources: [`electron/main.cjs`](../electron/main.cjs), [`electron/preload.cjs`](../electron/preload.cjs), and [`update-settings.tsx`](../components/settings/update-settings.tsx).
 
-After a stable release is published, [`.github/workflows/notify-website.yml`](../.github/workflows/notify-website.yml) dispatches `desktop-release-published` with the tag to `amosblomqvist/learnharness-web`, using the separately scoped `WEBSITE_DISPATCH_TOKEN` secret. Drafts and prereleases do not trigger that job. A successful HTTP 204 means the website update was **queued**, not that deployment or public links have been verified.
+This fork has no website-notification step. Upstream's `notify-website.yml` workflow — which dispatched `desktop-release-published` to the upstream website repository through a separately scoped `WEBSITE_DISPATCH_TOKEN` secret — was removed with the fork, so publishing a release notifies no other system. Installers and updater feeds are distributed through this repository's GitHub Releases only.

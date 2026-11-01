@@ -33,13 +33,13 @@ import type { ChatStore } from "../core/ports.ts";
  *  {type:"dismiss-problem", problemCallId}). */
 export type ParkedDismissal = unknown;
 
-interface LhGlobal {
-	__lhParkedDismissals?: Map<string, ParkedDismissal>;
+interface KilnGlobal {
+	__kilnParkedDismissals?: Map<string, ParkedDismissal>;
 }
 
 function registry(): Map<string, ParkedDismissal> {
-	const g = globalThis as typeof globalThis & LhGlobal;
-	return (g.__lhParkedDismissals ??= new Map<string, ParkedDismissal>());
+	const g = globalThis as typeof globalThis & KilnGlobal;
+	return (g.__kilnParkedDismissals ??= new Map<string, ParkedDismissal>());
 }
 
 /** Park (or overwrite) the chat's dismissal intent. Called by the dismiss

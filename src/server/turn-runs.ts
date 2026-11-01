@@ -30,21 +30,21 @@
 
 import type { PiTurnHandle } from "./pi/ui-stream.ts";
 
-interface LhTurnRunsGlobal {
-	__lhTurnRuns?: Map<string, PiTurnHandle>;
-	__lhTurnFailures?: Map<string, string>;
+interface KilnTurnRunsGlobal {
+	__kilnTurnRuns?: Map<string, PiTurnHandle>;
+	__kilnTurnFailures?: Map<string, string>;
 }
 
 function runs(): Map<string, PiTurnHandle> {
-	const g = globalThis as typeof globalThis & LhTurnRunsGlobal;
-	return (g.__lhTurnRuns ??= new Map<string, PiTurnHandle>());
+	const g = globalThis as typeof globalThis & KilnTurnRunsGlobal;
+	return (g.__kilnTurnRuns ??= new Map<string, PiTurnHandle>());
 }
 
 /** One small, transient notice per failed session. Never stores messages.
  * Cleared on the next accepted begin, session deletion, or process exit. */
 function failures(): Map<string, string> {
-	const g = globalThis as typeof globalThis & LhTurnRunsGlobal;
-	return (g.__lhTurnFailures ??= new Map<string, string>());
+	const g = globalThis as typeof globalThis & KilnTurnRunsGlobal;
+	return (g.__kilnTurnFailures ??= new Map<string, string>());
 }
 
 export function rememberTurnFailure(chatId: string, errorText: string): void {

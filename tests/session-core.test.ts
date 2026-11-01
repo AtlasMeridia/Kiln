@@ -23,7 +23,7 @@ import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import { absorbed, pendingCallTool, SessionModel } from "../components/session-core.ts";
 import type { ChatInput } from "../src/core/input-events.ts";
-import type { LhMessage } from "../src/core/native-messages.ts";
+import type { KilnMessage } from "../src/core/native-messages.ts";
 import { newUserMessage, newAnswerResult, newThinkingMessage, needsContinuation, endsInDismissal, pendingQuestionOf } from "../src/core/native-messages.ts";
 import { endsInFailedTurn, newCompactionMarker, newPlanBlockMessage, projectView } from "../src/core/index.ts";
 import { dismissedAnswer } from "../src/core/question-core.ts";
@@ -88,7 +88,7 @@ function dietFetch(opts: {
 	}) as typeof globalThis.fetch;
 }
 
-function assistantMsg(id: string, text: string): LhMessage {
+function assistantMsg(id: string, text: string): KilnMessage {
 	return {
 		id,
 		role: "assistant",
@@ -98,7 +98,7 @@ function assistantMsg(id: string, text: string): LhMessage {
 		timestamp: 0,
 		provider: "openrouter",
 		model: "test",
-	} as unknown as LhMessage;
+	} as unknown as KilnMessage;
 }
 
 /** A streaming assistant partial (pi events carry the FULL partial — and
@@ -336,7 +336,7 @@ describe("send (one input event, verbatim consumption)", () => {
 			provider: "openrouter",
 			model: "test",
 			timestamp: 0,
-		} as unknown as LhMessage;
+		} as unknown as KilnMessage;
 		let postBody = "";
 		globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
 			if (String(input) === "/api/chat") {
@@ -486,8 +486,8 @@ it("Wave C: markers injected mid-run (custom role, follow-up delivery) append to
 // ─── provider failures: one marker-aware rule for live and saved records ────
 
 describe("provider-error banner (live and saved)", () => {
-	function failed(id = "failed", errorMessage: string | undefined = "Google 500: fixture failure"): LhMessage {
-		return { ...assistantMsg(id, ""), content: [], stopReason: "error", errorMessage } as LhMessage;
+	function failed(id = "failed", errorMessage: string | undefined = "Google 500: fixture failure"): KilnMessage {
+		return { ...assistantMsg(id, ""), content: [], stopReason: "error", errorMessage } as KilnMessage;
 	}
 
 	it("restores an empty failed response on load and full sync without adding a transcript card", () => {
@@ -507,17 +507,17 @@ describe("provider-error banner (live and saved)", () => {
 	});
 
 	it("uses the existing fallback wording when the saved failure has no error text", () => {
-		const withoutText = { ...failed(), errorMessage: undefined } as LhMessage;
+		const withoutText = { ...failed(), errorMessage: undefined } as KilnMessage;
 		assert.equal(model({ initialMessages: [withoutText] }).getState().error?.message, "An error occurred.");
 		assert.equal(model().getState().error, null);
 	});
 
 	it("substantive later input/output supersedes the failure, including aborts", () => {
 		const failure = failed();
-		const later: LhMessage[] = [
+		const later: KilnMessage[] = [
 			newUserMessage("retry"),
 			assistantMsg("success", "Hello"),
-			{ ...assistantMsg("aborted", ""), stopReason: "aborted", errorMessage: "Aborted" } as LhMessage,
+			{ ...assistantMsg("aborted", ""), stopReason: "aborted", errorMessage: "Aborted" } as KilnMessage,
 			newThinkingMessage("problem", "my attempt"),
 			resultMsg("call"),
 		];
@@ -836,7 +836,7 @@ describe("truncated stream recovery", () => {
 });
 
 describe("automatic continuation after recovery failure", () => {
-	const question = { ...assistantMsg("question", ""), content: [{ type: "toolCall", id: "q1", name: "quiz", arguments: { question: "Q?" } }] } as LhMessage;
+	const question = { ...assistantMsg("question", ""), content: [{ type: "toolCall", id: "q1", name: "quiz", arguments: { question: "Q?" } }] } as KilnMessage;
 	const answer = buildAnswer({ id: "q1", kind: "quiz", question: "Q?", mode: "single-select", options: [], createdAt: "fixture" }, { dontKnow: true });
 	const answered = [question, newAnswerResult("q1", "quiz", answer)];
 
@@ -885,7 +885,7 @@ describe("answer submission recovery", () => {
 	const question = {
 		...assistantMsg("question", "Q?"),
 		content: [{ type: "toolCall", id: "q1", name: "quiz", arguments: { question: "Q?", options: [{ label: "A" }, { label: "B" }], correctAnswer: "A", explanation: "A is correct." } }],
-	} as LhMessage;
+	} as KilnMessage;
 	const answer = buildAnswer({ id: "q1", kind: "quiz", question: "Q?", mode: "single-select", options: [], createdAt: "fixture" }, { dontKnow: true, thinking: "keep my reasoning" });
 
 	it("restores the question after a failed POST and checks the record before another POST", async () => {
@@ -932,7 +932,7 @@ describe("answer submission recovery", () => {
 
 	it("does not repost an answer whose acceptance acknowledgement was lost", async () => {
 		let posts = 0;
-		const saved = JSON.parse(JSON.stringify([question, newAnswerResult("q1", "quiz", answer)])) as LhMessage[];
+		const saved = JSON.parse(JSON.stringify([question, newAnswerResult("q1", "quiz", answer)])) as KilnMessage[];
 		const m = model({ initialMessages: [question], fetch: async (url) => {
 			if (String(url) === "/api/chat") { posts++; throw new TypeError("failed fetch"); }
 			return Response.json({ messages: saved, turnInFlight: false });
@@ -984,7 +984,7 @@ describe("answer submission recovery", () => {
 	it("restores an unconfirmed optimistic answer when the post-ack record read fails", async () => {
 		let posts = 0;
 		let reads = 0;
-		const saved = JSON.parse(JSON.stringify([question, newAnswerResult("q1", "quiz", answer)])) as LhMessage[];
+		const saved = JSON.parse(JSON.stringify([question, newAnswerResult("q1", "quiz", answer)])) as KilnMessage[];
 		const m = model({ initialMessages: [question], fetch: async (url) => {
 			if (String(url) === "/api/chat") { posts++; return Response.json({ ok: true }); }
 			if (++reads === 1) throw new TypeError("record read failed");
@@ -1044,7 +1044,7 @@ describe("answer submission recovery", () => {
 
 	it("does not mistake an old same-id answer for resolution of the current question during recovery", async () => {
 		let posts = 0;
-		const newer = { ...question, id: "new-question" } as LhMessage;
+		const newer = { ...question, id: "new-question" } as KilnMessage;
 		const record = [question, newAnswerResult("q1", "quiz", answer), newer];
 		const m = model({ initialMessages: record, fetch: async (url) => {
 			if (String(url) === "/api/chat") { posts++; return new Response("refused", { status: 500 }); }
@@ -1062,7 +1062,7 @@ describe("answer submission recovery", () => {
 
 	it("adopts a newer same-id occurrence instead of reposting an older question's answer", async () => {
 		let posts = 0;
-		const newer = { ...question, id: "new-question" } as LhMessage;
+		const newer = { ...question, id: "new-question" } as KilnMessage;
 		const m = model({ initialMessages: [question], fetch: async (url) => {
 			if (String(url) === "/api/chat") { posts++; throw new TypeError("offline"); }
 			return Response.json({ messages: [question, newer], turnInFlight: false });
@@ -1079,7 +1079,7 @@ describe("answer submission recovery", () => {
 		let requests = 0;
 		const m = model({ initialMessages: [question], fetch: async () => { requests++; return Response.json({ ok: true }); } });
 		const oldKey = pendingQuestionOf([question])!.key;
-		const newer = { ...question, id: "new-question" } as LhMessage;
+		const newer = { ...question, id: "new-question" } as KilnMessage;
 		m.setMessages([question, newer]);
 		await m.submitAnswer("quiz", "q1", answer, oldKey);
 		await m.dismissQuestion("q1", answer, oldKey);
@@ -1088,7 +1088,7 @@ describe("answer submission recovery", () => {
 	});
 
 	it("uses the newest occurrence's tool for optimistic answers and dismissals", async () => {
-		const older = { ...question, id: "old-ask", content: [{ type: "toolCall", id: "q1", name: "ask_user_question", arguments: {} }] } as LhMessage;
+		const older = { ...question, id: "old-ask", content: [{ type: "toolCall", id: "q1", name: "ask_user_question", arguments: {} }] } as KilnMessage;
 		for (const dismiss of [false, true]) {
 			const m = model({ initialMessages: [older, question], fetch: async () => { throw new TypeError("offline"); } });
 			const key = pendingQuestionOf([older, question])!.key;
@@ -1107,7 +1107,7 @@ describe("answer submission recovery", () => {
 		const m = model({ initialMessages: [question] });
 		const oldKey = pendingQuestionOf([question])!.key;
 		m.saveQuestionDraft(oldKey, { readingThinking: "old reasoning" });
-		const newer = { ...question, id: "new-question" } as LhMessage;
+		const newer = { ...question, id: "new-question" } as KilnMessage;
 		m.setMessages([question, newer]);
 		const newKey = pendingQuestionOf([question, newer])!.key;
 		assert.notEqual(oldKey, newKey);
@@ -1124,7 +1124,7 @@ describe("answer submission recovery", () => {
 
 	it("adopts a changed pending question instead of sending the stale answer", async () => {
 		let posts = 0;
-		const newer = { ...question, id: "new-question", content: [{ type: "toolCall", id: "q2", name: "quiz", arguments: {} }] } as LhMessage;
+		const newer = { ...question, id: "new-question", content: [{ type: "toolCall", id: "q2", name: "quiz", arguments: {} }] } as KilnMessage;
 		const m = model({ initialMessages: [question], fetch: async (url) => {
 			if (String(url) === "/api/chat") { posts++; throw new TypeError("failed fetch"); }
 			return Response.json({ messages: [question, newer], turnInFlight: false });
@@ -1432,7 +1432,7 @@ describe("resumeStream (the reattach path)", () => {
 
 // ─── adoption (append-only ground rules, owner 2026-09-15) ──────────────────
 
-function userText(id: string, text: string): LhMessage {
+function userText(id: string, text: string): KilnMessage {
 	return { ...newUserMessage(text), id };
 }
 
@@ -1440,7 +1440,7 @@ describe("adoptRecord — append-only adoption", () => {
 	it("splices a server-added steer between the record and the live tail", () => {
 		const m = model({ initialMessages: [userText("u1", "topic")] });
 		m.applyWireEvent({ type: "message_start", message: { role: "assistant", content: [{ type: "text", text: "streaming" }] } });
-		const steer = { ...newUserMessage("steered content"), id: "steer_1" } as LhMessage & { role: "user" };
+		const steer = { ...newUserMessage("steered content"), id: "steer_1" } as KilnMessage & { role: "user" };
 		const record = [userText("u1", "topic"), steer];
 		m.adoptRecord(record);
 		const ids = m.getState().nativeMessages.map((x) => x.id);
@@ -1461,16 +1461,16 @@ describe("adoptRecord — append-only adoption", () => {
 	it("absorbs the optimistic entries the record has taken over (no doubled bubbles)", () => {
 		// A text send's optimistic bubble (local c_ id): the write-ahead's
 		// server copy absorbs it by CONTENT — the bubble never doubles.
-		const optimistic = { ...newUserMessage("my question"), id: "c_local_1" } as LhMessage;
-		const serverCopy = { ...newUserMessage("my question"), id: "srv_9" } as LhMessage;
+		const optimistic = { ...newUserMessage("my question"), id: "c_local_1" } as KilnMessage;
+		const serverCopy = { ...newUserMessage("my question"), id: "srv_9" } as KilnMessage;
 		assert.ok(absorbed(optimistic, [userText("u1", "topic"), serverCopy]), "content match absorbs the local copy");
 		assert.ok(!absorbed(serverCopy, [optimistic]), "server stamps are never absorbed");
 		assert.ok(!absorbed({ ...newUserMessage("my question") }, [serverCopy]), "an id-less message is never absorbed");
 		// The answer result absorbs by toolCallId (ids differ, content may too —
 		// the toolCallId is the identity of an answer).
-		const answer = { ...newAnswerResult("call-1", "quiz", { correct: true }), id: "c_local_2" } as LhMessage;
+		const answer = { ...newAnswerResult("call-1", "quiz", { correct: true }), id: "c_local_2" } as KilnMessage;
 		assert.ok(
-			absorbed(answer, [{ ...newAnswerResult("call-1", "quiz", { correct: true }), id: "srv_10" } as LhMessage]),
+			absorbed(answer, [{ ...newAnswerResult("call-1", "quiz", { correct: true }), id: "srv_10" } as KilnMessage]),
 			"the answer result absorbs by toolCallId",
 		);
 	});
@@ -1487,7 +1487,7 @@ describe("adoptRecord — append-only adoption", () => {
 
 // ─── the continuation fold (mount/sync seam) ────────────────────────────────
 
-function assistantWithCall(id: string, callId: string, name = "research"): LhMessage {
+function assistantWithCall(id: string, callId: string, name = "research"): KilnMessage {
 	return {
 		id,
 		role: "assistant",
@@ -1497,14 +1497,14 @@ function assistantWithCall(id: string, callId: string, name = "research"): LhMes
 		provider: "openrouter",
 		model: "test",
 		timestamp: 0,
-	} as unknown as LhMessage;
+	} as unknown as KilnMessage;
 }
 
-function resultMsg(callId: string, name = "research"): LhMessage {
+function resultMsg(callId: string, name = "research"): KilnMessage {
 	return {
 		...newAnswerResult(callId, name, { ok: true }),
 		id: `r_${callId}`,
-	} as unknown as LhMessage;
+	} as unknown as KilnMessage;
 }
 
 describe("needsContinuation (the native lastAssistantMessageIsCompleteWithToolCalls)", () => {
@@ -1532,7 +1532,7 @@ describe("needsContinuation (the native lastAssistantMessageIsCompleteWithToolCa
 					{ type: "toolCall", id: "call-a", name: "quiz", arguments: {} },
 					{ type: "toolCall", id: "call-b", name: "quiz", arguments: {} },
 				],
-			} as unknown as LhMessage,
+			} as unknown as KilnMessage,
 			resultMsg("call-a", "quiz"),
 		];
 		assert.equal(needsContinuation(messages), false);
@@ -1550,11 +1550,11 @@ describe("needsContinuation (the native lastAssistantMessageIsCompleteWithToolCa
 describe("the dismissal pause (needsContinuation + endsInDismissal)", () => {
 	/** The record's silent dismiss write: the toolResult the dismiss route
 	 *  appends (full answer in details — the folds read it there). */
-	function dismissedMsg(callId: string): LhMessage {
+	function dismissedMsg(callId: string): KilnMessage {
 		return {
 			...newAnswerResult(callId, "quiz", dismissedAnswer("quiz", "Pick a planet")),
 			id: `d_${callId}`,
-		} as unknown as LhMessage;
+		} as unknown as KilnMessage;
 	}
 
 	it("an all-dismissed tail demands NO continuation — the session waits for the user", () => {
@@ -1570,12 +1570,12 @@ describe("the dismissal pause (needsContinuation + endsInDismissal)", () => {
 				{ type: "toolCall", id: "call-a", name: "quiz", arguments: {} },
 				{ type: "toolCall", id: "call-b", name: "ask_user_question", arguments: {} },
 			],
-		} as unknown as LhMessage;
+		} as unknown as KilnMessage;
 		const messages = [
 			userText("u1", "topic"),
 			assistant,
 			dismissedMsg("call-a"),
-			{ ...newAnswerResult("call-b", "ask_user_question", dismissedAnswer("ask", "Why?")), id: "d_call-b" } as unknown as LhMessage,
+			{ ...newAnswerResult("call-b", "ask_user_question", dismissedAnswer("ask", "Why?")), id: "d_call-b" } as unknown as KilnMessage,
 		];
 		assert.equal(endsInDismissal(messages), true);
 		assert.equal(needsContinuation(messages), false, "dismissed by id, not by position — the batch rule holds");
@@ -1588,7 +1588,7 @@ describe("the dismissal pause (needsContinuation + endsInDismissal)", () => {
 				{ type: "toolCall", id: "call-a", name: "quiz", arguments: {} },
 			{ type: "toolCall", id: "call-b", name: "quiz", arguments: {} },
 			],
-		} as unknown as LhMessage;
+		} as unknown as KilnMessage;
 		const messages = [userText("u1", "topic"), assistant, resultMsg("call-a", "quiz"), dismissedMsg("call-b")];
 		assert.equal(endsInDismissal(messages), true, "tail ends in the dismissal");
 		assert.equal(needsContinuation(messages), false, "ending on a dismissal = the user signaled stop — the reaction rides the next message");
@@ -1601,7 +1601,7 @@ describe("the dismissal pause (needsContinuation + endsInDismissal)", () => {
 				{ type: "toolCall", id: "call-a", name: "quiz", arguments: {} },
 				{ type: "toolCall", id: "call-b", name: "quiz", arguments: {} },
 			],
-		} as unknown as LhMessage;
+		} as unknown as KilnMessage;
 		const messages = [userText("u1", "topic"), assistant, dismissedMsg("call-a"), resultMsg("call-b", "quiz")];
 		assert.equal(endsInDismissal(messages), false);
 		assert.equal(needsContinuation(messages), true, "ending on a real answer = the reaction is owed");
@@ -1674,14 +1674,14 @@ describe("newAnswerResult two audiences", () => {
 // adoption window rendered the submission twice for the whole turn.
 
 /** The post-settle pose-turn record of a practice session. */
-function poseRecord(): LhMessage[] {
+function poseRecord(): KilnMessage[] {
 	return [
 		{ id: "m1", role: "user", content: "db practice" },
 		{
 			id: "m3",
 			role: "assistant",
 			content: [{ type: "toolCall", id: "call-p1", name: "problem", arguments: { statement: "Q?" } }],
-		} as unknown as LhMessage,
+		} as unknown as KilnMessage,
 		{
 			id: "m4",
 			role: "toolResult",
@@ -1689,8 +1689,8 @@ function poseRecord(): LhMessage[] {
 			toolName: "problem",
 			content: [{ type: "text", text: "Problem posed — the turn ends here." }],
 			details: null,
-		} as unknown as LhMessage,
-	] as LhMessage[];
+		} as unknown as KilnMessage,
+	] as KilnMessage[];
 }
 
 describe("the live-view law — live is positive evidence, not session busyness", () => {
@@ -1712,7 +1712,7 @@ describe("the live-view law — live is positive evidence, not session busyness"
 				id: "c_as1",
 				role: "assistant",
 				content: [{ type: "toolCall", id: "call-c1", name: "conclude", arguments: { outcome: "solved" } }],
-			} as unknown as LhMessage,
+			} as unknown as KilnMessage,
 		];
 		const view = projectView(messages, live);
 		const conclude = view.flatMap((m) => m.parts).find((p) => p.type === "tool-conclude");
@@ -1728,8 +1728,8 @@ describe("the live-view law — live is positive evidence, not session busyness"
 				id: "m2",
 				role: "assistant",
 				content: [{ type: "toolCall", id: "call-p9", name: "problem", arguments: { statement: "Q?" } }],
-			} as unknown as LhMessage,
-		] as LhMessage[];
+			} as unknown as KilnMessage,
+		] as KilnMessage[];
 		const view = projectView(messages, live);
 		const part = view.flatMap((m) => m.parts).find((p) => p.type === "tool-problem");
 		assert.equal(part!.state, "input-available", "no evidence, no shimmer — even mid-turn");
@@ -1738,11 +1738,11 @@ describe("the live-view law — live is positive evidence, not session busyness"
 
 describe("absorbed — the custom role (the doubled thinking card)", () => {
 	it("absorbs the optimistic thinking marker by customType + details", () => {
-		const optimistic = { ...newThinkingMessage("call-p1", "my trace"), id: "c_opt1" } as LhMessage;
-		const serverCopy = { ...newThinkingMessage("call-p1", "my trace"), id: "srv_1" } as LhMessage;
+		const optimistic = { ...newThinkingMessage("call-p1", "my trace"), id: "c_opt1" } as KilnMessage;
+		const serverCopy = { ...newThinkingMessage("call-p1", "my trace"), id: "srv_1" } as KilnMessage;
 		assert.ok(absorbed(optimistic, [...poseRecord(), serverCopy]), "same submission → the local copy drops");
 		// A DIFFERENT submission (different text) is its own marker.
-		const other = { ...newThinkingMessage("call-p1", "a later, different trace"), id: "srv_2" } as LhMessage;
+		const other = { ...newThinkingMessage("call-p1", "a later, different trace"), id: "srv_2" } as KilnMessage;
 		assert.ok(!absorbed(optimistic, [...poseRecord(), other]), "different details → not the same submission");
 		// The c_ gate: server stamps are never absorbed, whatever the role.
 		assert.ok(!absorbed(serverCopy, [optimistic]), "server ids never drop");
@@ -1753,14 +1753,14 @@ describe("absorbed — the custom role (the doubled thinking card)", () => {
 		// the tail (client id), then the +400ms adoption fetch swaps in the
 		// write-ahead record (server id). ONE card must remain.
 		const m = model({ chatId: "chat_x", initialMessages: poseRecord() });
-		const optimistic = { ...newThinkingMessage("call-p1", "my trace"), id: "c_opt1" } as LhMessage;
+		const optimistic = { ...newThinkingMessage("call-p1", "my trace"), id: "c_opt1" } as KilnMessage;
 		m.applyWireEvent({ type: "message_start", message: optimistic });
 		assert.equal(
 			m.getState().nativeMessages.filter((x) => (x as { role?: string }).role === "custom").length,
 			1,
 			"the optimistic marker is in the tail",
 		);
-		const serverCopy = { ...newThinkingMessage("call-p1", "my trace"), id: "srv_1" } as LhMessage;
+		const serverCopy = { ...newThinkingMessage("call-p1", "my trace"), id: "srv_1" } as KilnMessage;
 		m.adoptRecord([...poseRecord(), serverCopy]);
 		const customs = m.getState().nativeMessages.filter((x) => (x as { role?: string }).role === "custom");
 		assert.equal(customs.length, 1, "the server copy replaced the optimistic one — no doubling");

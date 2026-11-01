@@ -1,4 +1,4 @@
-# LearnHarness architecture
+# Kiln architecture
 
 This is the current implementation reference for the released app: a Next.js application with an Electron host, native Pi conversations, adaptive teaching and conversational practice, and a persistent knowledge graph. [Development](development.md) covers setup and commands; [teaching methodology](teaching-methodology.md) covers the pedagogical method. Older design documents and the [archived architecture](archive/architecture-2026-09-08.md) are history, not runtime specifications.
 
@@ -26,7 +26,7 @@ These are not a complete hexagonal-architecture proof. Some core modules are Nod
 
 These are different lifetimes:
 
-- **Conversation:** a durable `ChatRecord` in `data/chats/<id>.json`, containing native `LhMessage[]`, settings, an optional plan tree and usage logs. Missing `kind` means teaching; `kind: "practice"` selects the practitioner.
+- **Conversation:** a durable `ChatRecord` in `data/chats/<id>.json`, containing native `KilnMessage[]`, settings, an optional plan tree and usage logs. Missing `kind` means teaching; `kind: "practice"` selects the practitioner.
 - **Engine:** a resolved Pi model, stream function and thinking level (`PiEngine` in `src/agent/models.ts`). It is provider-aware, not an OpenRouter-only abstraction.
 - **Agent:** a fresh `@earendil-works/pi-agent-core` `Agent` constructed for one application turn, with that conversation's history, current prompt and current tool registry.
 - **Application turn:** one accepted input followed by a server-owned agent run. A run can make several model calls and execute tools before it ends. It is not an HTTP connection or a single provider generation.
@@ -49,7 +49,7 @@ flowchart LR
 
 The server owns the transcript. `POST /api/chat` carries `{chatId, input}`, not a replacement client transcript. `src/core/input-events.ts` parses explicit text, answer, thinking, next-problem, continuation and retry inputs into record appends; server-side wakes use the same turn composition with steer markers.
 
-`LhMessage` extends Pi's native user, assistant and tool-result messages with record IDs and app custom markers. Provider/model/usage/thinking metadata stays native. Two different projections consume it:
+`KilnMessage` extends Pi's native user, assistant and tool-result messages with record IDs and app custom markers. Provider/model/usage/thinking metadata stays native. Two different projections consume it:
 
 - `src/core/native-messages.ts` → `toLlmMessages`: strips app-only metadata, flattens model-facing markers to user text, omits presentation-only markers and applies the active compaction cut. Unanswered calls from completed generations receive synthetic interrupted results at this boundary; calls in failed/aborted generations do not acquire orphan results.
 - `src/core/view.ts` → `projectView`: groups the native record into the UI's messages, parts and artifacts. This view is not the stored format or the provider wire. The app does not use the AI SDK's `useChat`/`addToolOutput` continuation loop.
@@ -202,7 +202,7 @@ Notifications generally follow the corresponding mutation. Chat content-store op
 
 ## 8. Storage and compatibility
 
-[`config.ts`](../config.ts) anchors shipped prompt assets to the application root and mutable state to `LH_DATA_DIR` (default: repo `data/`). The main storage ports are semantic interfaces in `src/core/ports.ts`, not a generic document database.
+[`config.ts`](../config.ts) anchors shipped prompt assets to the application root and mutable state to `KILN_DATA_DIR` (default: repo `data/`). The main storage ports are semantic interfaces in `src/core/ports.ts`, not a generic document database.
 
 | Data | Persistence |
 |---|---|
@@ -211,7 +211,7 @@ Notifications generally follow the corresponding mutation. Chat content-store op
 | Proposition assertions, chain assertions, extraction checkpoints/coverage | `graph/{nodes,chains,sessions,coverage}.jsonl` |
 | Imported source metadata/usage, resting positions, render preferences | JSON maps in `graph/` |
 | Non-secret settings deltas and prompt overrides | `settings.json`, `prompts/` |
-| API keys/custom endpoint credential binding | Separate `auth.json`, located by `LH_AUTH_FILE` |
+| API keys/custom endpoint credential binding | Separate `auth.json`, located by `KILN_AUTH_FILE` |
 
 The adapters use synchronous filesystem operations. JSONL readers skip corrupt or shape-invalid lines; graph derivation unions repeated identities/provenance. Some replacements use temp-file rename; whole-file chat/settings/source writes do not provide a database transaction. A synchronous read/modify/write section cannot interleave in the same event loop, but that is not cross-process locking or crash atomicity. Use one server owner for a data/auth profile.
 

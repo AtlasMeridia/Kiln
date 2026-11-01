@@ -9,7 +9,7 @@ import type { ChatDeleteMode } from "@/src/core";
 import { DumbbellIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PlusIcon, SearchIcon, SettingsIcon } from "lucide-react";
 import { ActivitySection } from "@/components/activity-dock";
 import { CoverageMenuBlock } from "@/components/extraction-coverage";
-import { LhMark } from "@/components/lh-mark";
+import { KilnMark } from "@/components/kiln-mark";
 import { BrailleSpinner } from "@/components/braille-spinner";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { SettingsDialogProvider, useSettingsDialog } from "@/components/settings/settings-dialog.tsx";
@@ -30,7 +30,7 @@ import { notifySettingsSaved } from "@/components/settings-signal";
  * layout) and across reloads (localStorage).
  */
 
-const STORAGE_KEY = "lh:sidebar-open";
+const STORAGE_KEY = "kiln:sidebar-open";
 
 /*
  * Narrow-window behavior (owner, 2026-09-17): below SIDEBAR_AUTOCLOSE the
@@ -41,7 +41,7 @@ const STORAGE_KEY = "lh:sidebar-open";
  * rendered = pref && !narrow, where pref is the persisted user choice.
  * Manual closes persist and stay closed; auto-close does not touch the
  * preference. Opening the sidebar while narrow asks the Electron shell to
- * widen the window to the threshold (window.lh.expandWindow, IPC in
+ * widen the window to the threshold (window.kiln.expandWindow, IPC in
  * electron/main.cjs) — the resize listener flips `narrow` and the sidebar
  * appears. In the plain browser there is no window to widen and no
  * suppression — a narrow tab opens the sidebar if the user says so.
@@ -59,7 +59,7 @@ const IS_ELECTRON = typeof navigator !== "undefined" && navigator.userAgent.incl
 declare global {
 	interface Window {
 		/** Preload bridge (electron/preload.cjs) — Electron only, absent in the browser. */
-		lh?: {
+		kiln?: {
 			/** Read-only host OS; determines the native-control gutter. */
 			platform?: string;
 			/** Resolve an OS-backed File without copying/uploading its contents. */
@@ -70,7 +70,7 @@ declare global {
 			chatgpt?: ChatGPTControlBridge;
 			subscriptions?: NativeSubscriptionControlBridge;
 			expandWindow: () => void;
-			/** The zoom truth (owner round 7): subscribes to "lh:zoom" pushes; returns unsubscribe. */
+			/** The zoom truth (owner round 7): subscribes to "kiln:zoom" pushes; returns unsubscribe. */
 			onZoom?: (cb: (factor: number) => void) => () => void;
 			getZoom?: () => Promise<number>;
 			/** Observational update events and a snapshot for late subscribers. */
@@ -95,7 +95,7 @@ export function useSidebar() {
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
-		const bridge = window.lh?.chatgpt;
+		const bridge = window.kiln?.chatgpt;
 		if (!bridge) return;
 		const off = bridge.onChange(() => notifySettingsSaved("keys"));
 		notifySettingsSaved("keys"); // cover changes missed before this root-lifetime subscription
@@ -109,24 +109,24 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		// Electron shell detection (merged chrome, 2026-09-17): keys the
-		// .lh-electron CSS (app/globals.css) that turns the header bands
+		// .kiln-electron CSS (app/globals.css) that turns the header bands
 		// into the window's drag surface. Post-mount only — server HTML
 		// and first client render must agree (no hydration mismatch),
 		// and in the plain browser the class never appears.
 		if (IS_ELECTRON) {
-			document.documentElement.classList.add("lh-electron");
-			document.documentElement.dataset.lhPlatform = window.lh?.platform ?? "";
+			document.documentElement.classList.add("kiln-electron");
+			document.documentElement.dataset.kilnPlatform = window.kiln?.platform ?? "";
 		}
 
 		// THE ZOOM TRUTH (owner round 7, 2026-10-05): ⌘±/⌘0 zoom the UI
 		// (Electron zoomFactor) while the native traffic lights stay
 		// physical-fixed — the CSS gutter lengths divide by this factor so
 		// their RENDERED size never moves. getZoom covers the first-paint
-		// race; every later change arrives as an lh:zoom push.
+		// race; every later change arrives as an kiln:zoom push.
 		const setZoomVar = (factor: number) =>
-			document.documentElement.style.setProperty("--lh-zoom", String(factor));
-		const off = window.lh?.onZoom?.(setZoomVar);
-		void window.lh?.getZoom?.().then(setZoomVar);
+			document.documentElement.style.setProperty("--kiln-zoom", String(factor));
+		const off = window.kiln?.onZoom?.(setZoomVar);
+		void window.kiln?.getZoom?.().then(setZoomVar);
 
 		const stored = localStorage.getItem(STORAGE_KEY);
 		// Default: open (first run introduces the sidebar).
@@ -156,7 +156,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 		if (narrow && !open) {
 			localStorage.setItem(STORAGE_KEY, "0");
 			setOpen(true);
-			window.lh?.expandWindow();
+			window.kiln?.expandWindow();
 			return;
 		}
 		setOpen((v) => {
@@ -168,8 +168,8 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 	// ⌘B: the global shortcut dispatches kbdEventForAction("toggle-sidebar")
 	// and the context answers on exactly that name — the shared spelling
 	// is the fix for the interlude bug (the listener sat on the pre-
-	// convention name "lh:toggle-sidebar" while the dispatcher sent
-	// "lh:kbd-toggle-sidebar", so ⌘B silently did nothing; owner
+	// convention name "kiln:toggle-sidebar" while the dispatcher sent
+	// "kiln:kbd-toggle-sidebar", so ⌘B silently did nothing; owner
 	// 2026-09-25).
 	useEffect(() => {
 		const event = kbdEventForAction("toggle-sidebar");
@@ -203,8 +203,8 @@ export function SidebarToggle() {
 	return (
 		<span
 			className={cn(
-				"sidebar-motion lh-no-drag relative flex h-9 shrink-0 overflow-hidden duration-200",
-				open ? "w-0 -mr-3" : "w-9 mr-0 lh-closed-toggle",
+				"sidebar-motion kiln-no-drag relative flex h-9 shrink-0 overflow-hidden duration-200",
+				open ? "w-0 -mr-3" : "w-9 mr-0 kiln-closed-toggle",
 			)}
 		>
 			<Hint label="Open sidebar" action="toggle-sidebar">
@@ -316,11 +316,11 @@ export function SessionRow({
 			<SessionStatus busy={chat.busy || chat.compacting} />
 			<span className="min-w-0 flex-1">
 				{/* Titles are the learner's/teacher's WORDS — Source Sans 3, the
-				    same voice the words were typed in (every input is lh-prose);
+				    same voice the words were typed in (every input is kiln-prose);
 				    the meta line below stays JetBrains Mono (machine data). One
 				    rule, finally applied to the picker too (owner, typography
 				    round): mono = chrome, Source Sans = human words. */}
-				<span className="block truncate font-prose text-(length:--lh-prose-size)">{chat.title}</span>
+				<span className="block truncate font-prose text-(length:--kiln-prose-size)">{chat.title}</span>
 				<span className="block text-xs text-muted-foreground">{sessionMeta(chat)}</span>
 			</span>
 			{/* The dumbbell rides the FAR RIGHT (owner round 6, 2026-10-05) —
@@ -375,7 +375,7 @@ export function RenameRow({ chat, onCommit, onCancel }: { chat: ChatListItem; on
 					}}
 					aria-label="Rename session"
 					data-testid="session-rename-input"
-					className="lh-input w-full min-w-0 truncate border-0 border-b border-border bg-transparent px-0 text-foreground outline-none"
+					className="kiln-input w-full min-w-0 truncate border-0 border-b border-border bg-transparent px-0 text-foreground outline-none"
 				/>
 				<span className="block truncate text-xs text-muted-foreground">{sessionMeta(chat)}</span>
 			</span>
@@ -387,7 +387,7 @@ export function RenameRow({ chat, onCommit, onCancel }: { chat: ChatListItem; on
  *  Teaching / All / Practice — a client-side filter over the same
  *  snapshot, persisted in localStorage, defaulting to All. */
 export type SessionKindFilter = "teach" | "all" | "practice";
-const KIND_FILTER_KEY = "lh:session-kind-filter";
+const KIND_FILTER_KEY = "kiln:session-kind-filter";
 
 function SessionsSidebar() {
 	const { open, toggle } = useSidebar();
@@ -452,19 +452,19 @@ function SessionsSidebar() {
 	}, []);
 
 	/* Instant rename propagation (2026-09-17): the chat header's rename
-	   commits dispatch lh:chat-renamed; patch the snapshot in place instead
+	   commits dispatch kiln:chat-renamed; patch the snapshot in place instead
 	   of waiting for the 2.5s poll. */
 	useEffect(() => {
 		const onRenamed = (e: Event) => {
 			const { id, title } = (e as CustomEvent<{ id: string; title: string }>).detail;
 			setChats((prev) => (prev ? prev.map((c) => (c.id === id ? { ...c, title } : c)) : prev));
 		};
-		window.addEventListener("lh:chat-renamed", onRenamed);
-		return () => window.removeEventListener("lh:chat-renamed", onRenamed);
+		window.addEventListener("kiln:chat-renamed", onRenamed);
+		return () => window.removeEventListener("kiln:chat-renamed", onRenamed);
 	}, []);
 
 	/* INSTANT TURN-STATE (owner, sidebar round 2026-10-02): the open
-	   session broadcasts lh:turn-state the instant its turn starts
+	   session broadcasts kiln:turn-state the instant its turn starts
 	   (submitted — the optimistic machine's own flip) and at settle —
 	   busy mirrors the server's own definition (isTurnRunning), so the
 	   patch is exact: spinner up the moment the action happens, cleared
@@ -489,8 +489,8 @@ function SessionsSidebar() {
 			setChats((prev) => (prev ? prev.map((c) => (c.id === id ? { ...c, busy: false } : c)) : prev));
 			void refresh(); // settle: the server snapshot is now truthful — land it now
 		};
-		window.addEventListener("lh:turn-state", onTurnState);
-		return () => window.removeEventListener("lh:turn-state", onTurnState);
+		window.addEventListener("kiln:turn-state", onTurnState);
+		return () => window.removeEventListener("kiln:turn-state", onTurnState);
 	}, [refresh]);
 
 	/* PUSH (architecture S6, 2026-10-02): the 2.5s poll is RETIRED — the
@@ -499,8 +499,8 @@ function SessionsSidebar() {
 	   writes), and turn-started/turn-settled for EVERY chat (unfiltered:
 	   any chat's turn flips busy/order/phase in this list). Announced
 	   fetches ride the 250ms trailing debounce (the S4/S5 law); resync
-	   (reconnect / dev-restart) is immediate. lh:turn-state +
-	   lh:chat-renamed stay for same-tab INSTANTS — local beats any
+	   (reconnect / dev-restart) is immediate. kiln:turn-state +
+	   kiln:chat-renamed stay for same-tab INSTANTS — local beats any
 	   round-trip. */
 	const refreshRef = useRef(refresh);
 	refreshRef.current = refresh;
@@ -565,7 +565,7 @@ function SessionsSidebar() {
 		if (ctxChatId === null) return;
 		const onPointerDown = (e: PointerEvent) => {
 			const target = e.target as Node;
-			if (target instanceof Element && target.closest("[data-lh-menu]")) return;
+			if (target instanceof Element && target.closest("[data-kiln-menu]")) return;
 			if (ctxAnchorRef.current?.contains(target)) return;
 			setCtxChatId(null);
 		};
@@ -585,7 +585,7 @@ function SessionsSidebar() {
 
 	// Inline rename (owner ruling, wave 6): the row swaps to a text input;
 	// commit rides the SAME plumbing as the header rename — PUT the title,
-	// then lh:chat-renamed patches every listener (this sidebar's own
+	// then kiln:chat-renamed patches every listener (this sidebar's own
 	// listener patches the snapshot instantly; an open chat header hears
 	// it too). Esc discards; empty commit discards (the header's rules).
 	const commitRename = useCallback(async (id: string, next: string) => {
@@ -599,7 +599,7 @@ function SessionsSidebar() {
 				body: JSON.stringify({ title: t }),
 			});
 			if (!res.ok) throw new Error(`rename failed: ${res.status}`);
-			window.dispatchEvent(new CustomEvent("lh:chat-renamed", { detail: { id, title: t } }));
+			window.dispatchEvent(new CustomEvent("kiln:chat-renamed", { detail: { id, title: t } }));
 		} catch (err) {
 			console.error("rename failed:", err); // keep the old title
 		}
@@ -615,7 +615,7 @@ function SessionsSidebar() {
 			setDeleting(null);
 			setChats((prev) => (prev ? prev.filter((c) => c.id !== id) : prev));
 			if (pathname === `/chat/${id}`) router.push("/");
-			window.dispatchEvent(new CustomEvent("lh:graph-revision", { detail: { revision: graphRevision } }));
+			window.dispatchEvent(new CustomEvent("kiln:graph-revision", { detail: { revision: graphRevision } }));
 		},
 		[pathname, router],
 	);
@@ -627,8 +627,8 @@ function SessionsSidebar() {
 			// slide-in doesn't gate the keystroke.
 			requestAnimationFrame(() => searchRef.current?.focus());
 		};
-		window.addEventListener("lh:kbd-sessions-search", onFocusSearch);
-		return () => window.removeEventListener("lh:kbd-sessions-search", onFocusSearch);
+		window.addEventListener("kiln:kbd-sessions-search", onFocusSearch);
+		return () => window.removeEventListener("kiln:kbd-sessions-search", onFocusSearch);
 	}, [open, toggle]);
 
 	// Keep the kbd-selected row in view (the rows are the container's only
@@ -651,14 +651,14 @@ function SessionsSidebar() {
 			aria-hidden={!open}
 		>
 			<div className="flex h-full w-72 flex-col border-r bg-background">
-				{/* LH wordmark — the owner's header; close toggle sits at the edge.
+				{/* Kiln wordmark — the owner's header; close toggle sits at the edge.
 				    Merged chrome (2026-09-17): in Electron this band is the
 				    window's drag surface and starts after the traffic lights
-				    (.lh-lights-gutter); in the browser those classes are inert. */}
-				<div className="lh-drag lh-lights-gutter flex items-center justify-between px-4 py-3">
+				    (.kiln-lights-gutter); in the browser those classes are inert. */}
+				<div className="kiln-drag kiln-lights-gutter flex items-center justify-between px-4 py-3">
 					{/* The owner's mark (2026-09-17) replaces the "LH" text — still the
 					    home link, still vertically centered by the band's items-center.
-					    The 92px .lh-lights-gutter keeps it clear of the traffic lights
+					    The 92px .kiln-lights-gutter keeps it clear of the traffic lights
 					    with the lights' own edge-inset as the gap. */}
 					{/* Hover mirrors the ghost toggle buttons (owner ask, 2026-09-17):
 					    same size-9 chip geometry, same hover:bg-accent treatment. */}
@@ -674,9 +674,9 @@ function SessionsSidebar() {
 						<Link
 							href="/"
 							aria-label="Home"
-							className="lh-no-drag flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50"
+							className="kiln-no-drag flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50"
 						>
-							<LhMark className="size-6" />
+							<KilnMark className="size-6" />
 						</Link>
 					</Hint>
 					<Hint label="Close sidebar" action="toggle-sidebar">
@@ -685,7 +685,7 @@ function SessionsSidebar() {
 							size="icon"
 							aria-label="Close sidebar"
 							onClick={toggle}
-							className="lh-no-drag"
+							className="kiln-no-drag"
 						>
 							<PanelLeftCloseIcon className="size-4" />
 						</Button>

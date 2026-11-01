@@ -11,7 +11,7 @@ Upgrade this port deliberately; the native golden fixtures are in
 Walk backward to the approximately 20,000-token retained-tail budget, then select
 the nearest valid user/assistant boundary at or after the crossing. Never start
 at a tool result. If trailing results alone exceed the budget, keep the preceding
-assistant call. Preserve adjacent context-invisible metadata. LearnHarness adapts
+assistant call. Preserve adjacent context-invisible metadata. Kiln adapts
 its visible custom markers to user-like entries, excludes UI-only markers, and
 uses the active compaction's retained history rather than discarded messages.
 
@@ -20,7 +20,7 @@ images receive the native fixed 1,200-token allowance. Encrypted signatures are
 not measured or stripped. Whole-message boundaries can overshoot. This does
 **not** guarantee a measured 20k tail or a fixed post-compaction request size.
 
-Only cutoff selection is ported. LearnHarness retains its educational summary
+Only cutoff selection is ported. Kiln retains its educational summary
 prompt, plan continuity, persistence, threshold, scheduling, and authorization
 lifecycle. It does not adopt Pi's coding summary or separate split-turn summary
 calls. A cut that drops no active history does not launch a summarizer.
@@ -84,7 +84,7 @@ These are **provider-dependent preferences, not fixed durations or cache-hit
 promises**. Pi owns the mapping. For example, supported Anthropic routes map
 Short/Long to five minutes/one hour; OpenAI mappings differ by model. Some
 adapters ignore the preference, subscription transports may omit it, and custom
-compatible endpoints may reject an unsupported parameter. LearnHarness does not
+compatible endpoints may reject an unsupported parameter. Kiln does not
 rewrite these mappings or retry with a different preference.
 
 Chats keep their own selected models but inherit Strong's retention preference.
@@ -122,7 +122,7 @@ catalog updates can reprice history. Saved native messages are not mutated.
 Mixed sessions sum only known API-dollar estimates and retain subscription/CLI
 labels alongside them. A CLI or custom turn remains unpriced in the accounting
 fold; it is not reclassified as subscription use or silently valued at $0. A
-CLI-reported cost outside LearnHarness would not establish API charges, plan
+CLI-reported cost outside Kiln would not establish API charges, plan
 entitlements, or the final bill.
 
 Saved input is Pi-normalized **fresh input**, disjoint from cache buckets. Never

@@ -1,26 +1,19 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/lh_banner_dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/lh_banner_light.png">
-    <img src="docs/assets/lh_banner_light.png" alt="LearnHarness" width="640">
-  </picture>
-</p>
-
 <p align="center"><strong>An agent harness for learning.</strong></p>
 
 <p align="center">
-  <a href="https://learnharness.ai">Download</a> ·
+  <a href="https://github.com/AtlasMeridia/Kiln/releases">Download</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="docs/development.md">Documentation</a> ·
-  <a href="https://github.com/amosblomqvist/learnharness/issues">Issues</a> ·
-  <a href="https://discord.gg/5tCHHQEB2e">Discord</a>
+  <a href="https://github.com/AtlasMeridia/Kiln/issues">Issues</a>
 </p>
 
-LearnHarness uses AI agents to plan and teach lessons from your current understanding to your goal. It builds a detailed picture of what you understand and how you reason. That picture is updated as you learn.
+> **Kiln is a fork of LearnHarness by Amos Blomqvist (AGPL-3.0).** The upstream project is at <https://github.com/amosblomqvist/learnharness>.
+
+Kiln uses AI agents to plan and teach lessons from your current understanding to your goal. It builds a detailed picture of what you understand and how you reason. That picture is updated as you learn.
 
 Instead of just giving you an explanation, it uses your answers and thinking to decide what you need next. Teaching builds understanding one reasoning step at a time. Practice makes it usable. A persistent knowledge graph carries it across sessions.
 
-![LearnHarness teaching session](docs/assets/teaching-session.png)
+![Kiln teaching session](docs/assets/teaching-session.png)
 
 ## How it works
 
@@ -39,15 +32,17 @@ What you are taught accumulates as propositions and reasoning chains: individual
 
 Future teaching sessions can read the graph instead of starting from scratch. Practice sessions can draw their material from it. It stores the ideas and their connections, not ratings of your ability.
 
-![LearnHarness knowledge graph](docs/assets/knowledge-graph.png)
+![Kiln knowledge graph](docs/assets/knowledge-graph.png)
 
 ## Download and get started
 
-**[Download from learnharness.ai](https://learnharness.ai)** · [GitHub Releases](https://github.com/amosblomqvist/learnharness/releases)
+**[Download from GitHub Releases](https://github.com/AtlasMeridia/Kiln/releases)**
 
-- **macOS (Apple Silicon):** signed and notarized DMG. Drag the app to Applications.
+- **macOS (Apple Silicon):** DMG. Drag the app to Applications.
 - **Windows (x64):** run the installer. It is currently unsigned; Windows may show an “unknown publisher” or SmartScreen warning.
 - **Linux (x64):** make the AppImage executable and open it, or install the Debian/Ubuntu `.deb`.
+
+These fork builds are unsigned. macOS may refuse to open the app on first launch (right-click → Open, or clear the quarantine flag); there is no notarization until this fork has its own signing certificate.
 
 Choose your models, then start a session with what you want to understand. You can use provider API keys, supported subscription connections in the desktop app, an installed [Claude Code CLI](docs/claude-code.md), or a [custom OpenAI-compatible endpoint](docs/custom-providers.md), including a local model server. Optional dictation and web search use separate service keys.
 
@@ -59,7 +54,7 @@ All three platforms support in-app updates.
 
 ## Your keys, your data
 
-- **Your keys and models.** No LearnHarness subscription or markup. Billing depends on your provider, CLI configuration, subscription, or local setup. The live cost meter estimates known API costs, not subscription, CLI, or custom-endpoint charges.
+- **Your keys and models.** No Kiln subscription or markup. Billing depends on your provider, CLI configuration, subscription, or local setup. The live cost meter estimates known API costs, not subscription, CLI, or custom-endpoint charges.
 - **Local storage.** Your chats, graph, settings, and API keys live on your machine. Learning records are plain files you can inspect.
 - **External services.** Models run through your configured providers. Model requests send the context needed for the task; web research and dictation also contact external services. Local storage does not mean offline processing.
 - **Inspectable behavior.** System prompts are visible and editable. The app is open source under the AGPL-3.0 license.
@@ -74,7 +69,7 @@ npm test           # deterministic, no LLM, no network
 
 See the [development guide](docs/development.md) for setup and checks, [architecture](docs/architecture.md) for the shipped runtime, [keyboard reference](docs/keyboard.md) for shortcuts, and [desktop release guide](docs/desktop-release.md) for packaging and updates.
 
-Questions, bug reports, and feature requests: [GitHub Issues](https://github.com/amosblomqvist/learnharness/issues).
+Questions, bug reports, and feature requests: [GitHub Issues](https://github.com/AtlasMeridia/Kiln/issues).
 
 ## License
 

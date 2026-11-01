@@ -1,17 +1,17 @@
 # Claude Code
 
-LearnHarness can run its agents through an externally installed **Claude Code CLI**.
+Kiln can run its agents through an externally installed **Claude Code CLI**.
 This is a separate provider from the Anthropic API and the built-in subscription
 connections. Claude Code owns authentication, routing, model access, and billing;
-LearnHarness does **not** guarantee subscription-only use.
+Kiln does **not** guarantee subscription-only use.
 
 ## User setup
 
 1. [Install and authenticate Claude Code](https://code.claude.com/docs/en/setup)
-   outside LearnHarness, using a terminal on **the machine running the LearnHarness
+   outside Kiln, using a terminal on **the machine running the Kiln
    server**, under its operating-system user. A CLI installed only on a remote
    browser's computer is not sufficient. No always-running CLI process is needed.
-2. Make the executable discoverable to that server process. LearnHarness searches
+2. Make the executable discoverable to that server process. Kiln searches
    its `PATH` and common user/native installation locations. On Windows it requires
    a directly runnable `claude.exe`; an npm installation exposing only `claude.cmd`
    does not qualify. Desktop launch environments can differ from terminal environments.
@@ -30,8 +30,8 @@ protocol compatibility. Each fresh model process also checks the version and
 refuses an old or unverifiable installation.
 
 Install, update, sign in, and change the CLI's account/configuration externally.
-There is no LearnHarness Claude Code sign-in, reauthentication, or account-status
-control. Switching the opt-in off blocks future LearnHarness requests using this
+There is no Kiln Claude Code sign-in, reauthentication, or account-status
+control. Switching the opt-in off blocks future Kiln requests using this
 provider and preserves saved model selections; it does not interrupt an already
 admitted turn or sign out the CLI. Use the normal cancellation control to stop
 running work.
@@ -44,16 +44,16 @@ running work.
 [`createClaudeCodeProvider`](../src/agent/claude-code/provider.ts) in Pi's model
 collection. The provider's `claude-code-cli` stream adapter converts CLI stream-JSON
 into native Pi assistant events. Model slots and background-role resolution use
-the same engine seam as other providers; LearnHarness still owns the agent loop,
+the same engine seam as other providers; Kiln still owns the agent loop,
 tool execution, questions, persistence, and jobs. The availability gate requires
 opt-in plus a discoverable executable, not a successful authentication probe.
 
 For each fresh process, [the adapter](../src/agent/claude-code/stream.ts) exposes the
-current LearnHarness tool schemas through a temporary
+current Kiln tool schemas through a temporary
 [Streamable HTTP MCP bridge](../src/agent/claude-code/tool-bridge.ts). It binds only
 `127.0.0.1` on an ephemeral port and requires a random per-bridge bearer token.
 CLI built-in tools are disabled; the strict MCP configuration permits the declared
-`mcp__learnharness__…` tools instead. Tool results return through the held MCP call,
+`mcp__kiln__…` tools instead. Tool results return through the held MCP call,
 including text, images, and error status.
 
 **Streamed tool intent alone never authorizes execution.** An authenticated MCP
@@ -65,10 +65,10 @@ compatibility seam, not an official stability guarantee for that CLI metadata.
 ### Credentials and process boundaries
 
 [Environment provenance](../src/core/auth-env.ts) removes credentials reflected
-into `process.env` **only by LearnHarness's key store** before launching the CLI
+into `process.env` **only by Kiln's key store** before launching the CLI
 or its version probe. The original launch environment, the user's `HOME`, and
 native CLI authentication/routing remain available. Thus an existing environment
-API key or native CLI configuration can affect billing. LearnHarness neither
+API key or native CLI configuration can affect billing. Kiln neither
 copies its saved API keys into this provider nor enforces a subscription-only
 account. Prompts, relevant history, and tool results go through the CLI's configured
 service.
@@ -86,13 +86,13 @@ server logs can therefore contain CLI diagnostic information.
 
 ### Ownership, reuse, and recovery
 
-LearnHarness's persisted transcript is authoritative, not a Claude Code saved
+Kiln's persisted transcript is authoritative, not a Claude Code saved
 session. [Conversation agents](../src/agent/teacher-agent.ts) pass the existing
 chat ID as Pi's `sessionId`; [background subagent runs](../src/agent/subagents/pi-run.ts)
 get a fresh identity per invocation, stable across that run's tool turns.
 
 A child normally exits after its final response. It is retained only while
-LearnHarness tools are waiting for results, including a learner question. A held
+Kiln tools are waiting for results, including a learner question. A held
 child can continue only for the same stream owner and nonempty session identity,
 matching tool-result IDs/names, the expected history extension, and unchanged
 model, effort, system prompt, tools, and child environment. Colliding tool IDs in
@@ -101,7 +101,7 @@ session ID can run, but never retains a reusable child.
 
 If there is no eligible held child—for example after timeout/restart, a changed
 configuration, or history replacement—the next call starts fresh and replays the
-active LearnHarness history. [Replay](../src/agent/claude-code/transcript.ts) is
+active Kiln history. [Replay](../src/agent/claude-code/transcript.ts) is
 labelled user/assistant/tool-call/tool-result text in a new user input, preserving
 user/tool-result images; it is **not** CLI `--resume` or exact native-role/thinking
 history restoration. The current system prompt and tool schemas are supplied
@@ -115,7 +115,7 @@ A question stops later tool work until the learner answers. An answer arriving
 while the child is still eligible resolves its held MCP call. Held children have
 a **10-minute idle timeout**; a later answer instead starts fresh with the question
 and answer in replay. The CLI MCP timeout is **30 minutes**, intentionally longer
-than LearnHarness's idle retention. These are held-tool limits, not a general
+than Kiln's idle retention. These are held-tool limits, not a general
 model-request deadline.
 
 Request abort kills the child and ends the active stream as aborted. Cancellation
@@ -130,7 +130,7 @@ crash or forced server termination.
 ## Usage, context, and troubleshooting
 
 Token counts come from CLI message stream usage (`input`, `output`, cache read,
-and cache creation), not transcript length or a LearnHarness tokenizer. The
+and cache creation), not transcript length or a Kiln tokenizer. The
 conversation meter uses the last qualifying completed response. A best-effort,
 local CLI control query requests summary context metadata; a valid reported
 budget supplies the denominator only for that session's matching model. It may
@@ -139,7 +139,7 @@ unsupported metadata does not block inference: the meter omits the maximum
 rather than using adapter placeholders. Compaction clears earlier measurements.
 See [compaction and accounting](compaction-accounting.md) for the shared rules.
 
-LearnHarness does **not** ingest the CLI's successful result-line dollar total.
+Kiln does **not** ingest the CLI's successful result-line dollar total.
 The adapter's internal zero rates are Pi-required placeholders; CLI turns/jobs
 remain **unpriced**, and model menus say **CLI billing**, not free or subscription
 usage. Any cost reported by the CLI itself is not proof of API charges, plan
