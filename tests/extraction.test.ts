@@ -21,6 +21,7 @@
  * deleted by this suite).
  */
 
+import "./isolated-data.ts"; // FIRST import: data-dir isolation loads before anything can pull config.ts
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";

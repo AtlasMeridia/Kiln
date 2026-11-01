@@ -1,3 +1,4 @@
+import "./isolated-data.ts"; // FIRST import: data-dir isolation loads before anything can pull config.ts
 import assert from "node:assert/strict";
 import { after, it } from "node:test";
 import { POST } from "../app/api/graph/import/route.ts";

@@ -1,17 +1,13 @@
+import "./isolated-data.ts"; // FIRST import: data-dir isolation loads before anything can pull config.ts
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
 import { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
 import { piModels } from "../src/agent/models.ts";
 import { toLlmMessages } from "../src/core/native-messages.ts";
 import { buildSubagentSteer } from "../src/core/contracts.ts";
-const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kiln-chatgpt-background-"));
-process.env.KILN_DATA_DIR = path.join(dir, "data");
-process.env.KILN_AUTH_FILE = path.join(dir, "scratch-auth.json");
-fs.writeFileSync(process.env.KILN_AUTH_FILE, "{}");
+// The dynamic imports below (upstream pattern) keep config.ts loading
+// after the env seam; isolated-data.ts now carries that guarantee.
 const { stores } = await import("../src/server/stores.ts");
 const { beginTurn, endTurn } = await import("../src/server/turn-liveness.ts");
 const { deliverJobResult, registerLiveAgent, unregisterLiveAgent, setTurnRunner, settleSteers, steerLiveChat } = await import("../src/server/jobs.ts");
@@ -29,7 +25,6 @@ before(() => {
 	Object.defineProperty(process, "send", { configurable: true, value: (_message: unknown, callback?: (error: Error) => void) => { callback?.(new Error("unexpected fixture desktop request")); return false; } });
 });
 after(() => {
-	fs.rmSync(dir, { recursive: true, force: true });
 	if (originalSend) Object.defineProperty(process, "send", originalSend); else delete process.send;
 	if (originalConnected) Object.defineProperty(process, "connected", originalConnected); else delete (process as { connected?: boolean }).connected;
 	if (desktopMarker === undefined) delete process.env.KILN_DESKTOP_SERVER; else process.env.KILN_DESKTOP_SERVER = desktopMarker;

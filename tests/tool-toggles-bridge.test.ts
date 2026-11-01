@@ -10,6 +10,7 @@
  * construction tests use an in-memory chat fixture like
  * question-tools.test.ts.
  */
+import "./isolated-data.ts"; // FIRST import: data-dir isolation loads before anything can pull config.ts
 import assert from "node:assert/strict";
 import { z } from "zod";
 import { describe, it } from "node:test";

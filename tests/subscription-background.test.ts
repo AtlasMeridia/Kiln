@@ -1,20 +1,16 @@
+import "./isolated-data.ts"; // FIRST import: data-dir isolation loads before anything can pull config.ts
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
 import { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
 import { piModels } from "../src/agent/models.ts";
 import { toLlmMessages } from "../src/core/native-messages.ts";
 import { buildSubagentSteer } from "../src/core/contracts.ts";
 import { NATIVE_SUBSCRIPTIONS } from "../src/core/contracts/subscriptions.ts";
-const directory = fs.mkdtempSync(path.join(os.tmpdir(), "kiln-subscription-background-"));
-process.env.KILN_DATA_DIR = path.join(directory, "data"); process.env.KILN_AUTH_FILE = path.join(directory, "auth.json"); fs.writeFileSync(process.env.KILN_AUTH_FILE, "{}");
 const { stores } = await import("../src/server/stores.ts");
-const { beginTurn, endTurn } = await import("../src/server/turn-liveness.ts");
 const { deliverJobResult, registerLiveAgent, unregisterLiveAgent, setTurnRunner, settleSteers, steerLiveChat, automaticFollowUpAllowed } = await import("../src/server/jobs.ts");
 const { persistTurn } = await import("../src/server/turn-service.ts");
+const { beginTurn, endTurn } = await import("../src/server/turn-liveness.ts");
 const originalSend = Object.getOwnPropertyDescriptor(process, "send"), originalConnected = Object.getOwnPropertyDescriptor(process, "connected");
 const marker = process.env.KILN_DESKTOP_SERVER, secret = process.env.KILN_DESKTOP_API_SECRET;
 let revision = 0;
@@ -31,7 +27,6 @@ before(() => {
 	Object.defineProperty(process, "send", { configurable: true, value: (_message: unknown, callback?: (error: Error) => void) => { callback?.(new Error("unexpected fixture request")); return false; } });
 });
 after(() => {
-	fs.rmSync(directory, { recursive: true, force: true });
 	if (originalSend) Object.defineProperty(process, "send", originalSend); else delete process.send;
 	if (originalConnected) Object.defineProperty(process, "connected", originalConnected); else delete (process as { connected?: boolean }).connected;
 	if (marker === undefined) delete process.env.KILN_DESKTOP_SERVER; else process.env.KILN_DESKTOP_SERVER = marker;
