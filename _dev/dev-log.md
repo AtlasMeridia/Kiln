@@ -32,3 +32,17 @@ Adopted atlas-design (Minerali v6.5) tokens. User decisions: full re-skin staged
 - **Derivation curve:** `derivedPalette` offsets +8/+22/+47 → +6/+33/+20 (tracks the Minerali graphite ladder: card #202024, hover ≈ smoke, border ≈ hairline). Custom backgrounds approximate; factory resolves via tokens. Electron title-bar overlay + window `backgroundColor` → #1a1a1d; symbolColor → paper.
 - **Verification:** typecheck clean; suite 3186/3187 (only the pre-existing upstream tsx failure). Live DOM: body bg #1a1a1d, fg #e6ddc8, mono chrome, `--ds-version` 6.5, `--radius` 0; `document.fonts` confirms Fraunces 400/700/900 + Literata loaded (next/font self-host).
 - **Pending:** stage 2 shape pass (square literal radii in components, hairline borders, rust links/emphasis, acid active-state cut, `--kiln-zoom` audit); `design-desk handoff bootstrap --project kiln` to register in consumers.json (needs a desk.css route); commit the accumulated working tree.
+
+## 2026-11-01 — Minerali stage 2: shape + signal pass (commit b887ff2)
+
+Shape: every literal radius that bypassed the token layer removed (shell 2px concession via rounded-lg; inner rounded-[10px]/[6px] and pill rounded-full → rounded-none; globals scrollbar/code-block/source-highlight literals → 0). True circles kept: toggle knobs, slider thumbs, choice-indicator dots, spinners, pulsing status dots. Concentric-radius math comments rewritten.
+
+Signal: prose links rust with 45%→100% underline hover; markdown headings → Fraunces (appearance weight, factory 900); active session/rename rows get a 2px acid bar; kind-filter selected chip inverts acid; quiz verdicts + practice outcome chips + artifact failure badges moved from Tailwind green/red/amber literals to --color-success/warning/destructive (new @theme aliases); Next-problem button = the one acid action per composer. KilnMark recolored: bone spiral, paper ring, acid center.
+
+Committed on rebrand-minerali (b887ff2) and pushed. Suite 3186/3187 (pre-existing upstream failure only). Remaining: design-desk bootstrap registration, banner/icon assets, commit of the earlier rebrand/minerali-1 work is done — branch not yet merged to main.
+
+## 2026-11-01 — Test fixture leak fixed (commit 9cc6b3a)
+
+The stray sidebar sessions ("Fixture/Scratch mixed queue", "steer:*", "Test:*", 126 chats + 91 jobs + graph sidecars) came from nine test files writing into the repo default `data/`. Root cause: `config.ts` captures `DATA_ROOT` from `KILN_DATA_DIR` at module load — hoisted static imports (models.ts → config.ts) evaluated before two tests' module-body env assignment, and seven more files had no isolation at all (best-effort after() unlink that missed async-completed jobs and graph sidecars, and abandons everything on failure).
+
+Fix: `tests/isolated-data.ts` — first-import helper that sets `KILN_DATA_DIR`/`KILN_AUTH_FILE` to a fresh temp dir before anything can load config.ts, self-removing at process exit. Wired into: chatgpt-background, subscription-background, api-key-hook, tool-toggles-bridge, jobs, chat-flow, graph, notes-import-route, extraction. Reproduced the leak single-file before fixing (2 chats per run); after the fix a full suite leaves `data/` at format.json + settings.json only. Suite 3186/3187 (pre-existing upstream failure only), tsc clean. Worth reporting upstream once the fork diverges less.
